@@ -1,0 +1,8 @@
+services:
+  - type: web
+    name: crypto-adventure-api
+    env: python
+    buildCommand: pip install -r backend/requirements.txt
+    startCommand: cd backend && python app.py
+    plan: free
+    healthCheckPath: /api/health
