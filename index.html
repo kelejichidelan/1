@@ -1,0 +1,2657 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>加密货币冒险</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --bg: #0d1117;
+            --card: #161b22;
+            --border: #30363d;
+            --text: #e6edf3;
+            --text2: #8b949e;
+            --green: #3fb950;
+            --red: #f85149;
+            --blue: #58a6ff;
+            --yellow: #d29922;
+            --purple: #bc8cff;
+            --orange: #f0883e;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+        .container { max-width: 480px; margin: 0 auto; padding: 12px; padding-bottom: 80px; }
+
+        /* 底部导航栏 */
+        .tab-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--card);
+            border-top: 1px solid var(--border);
+            display: flex;
+            z-index: 50;
+            max-width: 480px;
+            margin: 0 auto;
+        }
+        .tab-item {
+            flex: 1;
+            padding: 8px 0;
+            text-align: center;
+            font-size: 10px;
+            color: var(--text2);
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        .tab-item.active { color: var(--blue); }
+        .tab-item .tab-icon { font-size: 20px; display: block; margin-bottom: 2px; }
+
+        /* 页面切换 */
+        .page { display: none; }
+        .page.active { display: block; }
+
+        /* 顶部状态栏 */
+        .status-bar {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 12px;
+        }
+        .status-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .status-row:last-child { margin-bottom: 0; }
+        .day-label { font-size: 14px; color: var(--text2); }
+        .day-value { font-size: 16px; font-weight: 600; }
+        .pnl-positive { color: var(--green); }
+        .pnl-negative { color: var(--red); }
+
+        /* 资产卡片 */
+        .asset-cards {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+        .asset-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 12px;
+        }
+        .asset-card.full { grid-column: 1 / -1; }
+        .asset-name { font-size: 12px; color: var(--text2); margin-bottom: 4px; }
+        .asset-amount { font-size: 18px; font-weight: 700; }
+        .asset-usd { font-size: 12px; color: var(--text2); margin-top: 2px; }
+        .asset-price { font-size: 13px; color: var(--text2); }
+        .price-change { font-size: 12px; margin-left: 4px; }
+
+        /* 成就系统 */
+        .achievement-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+        .achievement-item {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 10px 6px;
+            text-align: center;
+            font-size: 11px;
+            opacity: 0.4;
+            transition: all 0.3s;
+        }
+        .achievement-item.unlocked {
+            opacity: 1;
+            border-color: var(--yellow);
+            background: rgba(210, 153, 34, 0.1);
+        }
+        .achievement-item .ach-icon { font-size: 24px; margin-bottom: 4px; }
+        .achievement-item .ach-name { font-weight: 600; font-size: 11px; }
+        .achievement-item .ach-desc { color: var(--text2); font-size: 9px; margin-top: 2px; }
+
+        /* 排行榜 */
+        .leaderboard-item {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            margin-bottom: 8px;
+        }
+        .lb-rank { font-size: 20px; width: 40px; text-align: center; }
+        .lb-info { flex: 1; margin-left: 12px; }
+        .lb-name { font-weight: 600; font-size: 14px; }
+        .lb-detail { font-size: 11px; color: var(--text2); margin-top: 2px; }
+        .lb-pnl { font-size: 16px; font-weight: 700; }
+
+        /* 教程弹窗 */
+        .tutorial-step { text-align: center; padding: 20px; }
+        .tutorial-step .tut-icon { font-size: 48px; margin-bottom: 12px; }
+        .tutorial-step .tut-title { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+        .tutorial-step .tut-desc { font-size: 14px; color: var(--text2); line-height: 1.6; margin-bottom: 16px; }
+        .tutorial-dots { display: flex; justify-content: center; gap: 6px; margin-bottom: 16px; }
+        .tutorial-dots .dot {
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            background: var(--border);
+        }
+        .tutorial-dots .dot.active { background: var(--blue); }
+
+        /* 道具系统 */
+        .item-card {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            margin-bottom: 8px;
+        }
+        .item-icon { font-size: 32px; width: 48px; text-align: center; }
+        .item-info { flex: 1; margin-left: 12px; }
+        .item-name { font-weight: 600; font-size: 14px; }
+        .item-desc { font-size: 11px; color: var(--text2); margin-top: 2px; }
+        .item-price {
+            background: var(--blue);
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+        .item-owned {
+            background: var(--green);
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+        }
+
+        /* 每日任务 */
+        .task-item {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            margin-bottom: 8px;
+        }
+        .task-item.completed {
+            opacity: 0.6;
+            border-color: var(--green);
+        }
+        .task-check { font-size: 20px; width: 32px; text-align: center; }
+        .task-info { flex: 1; margin-left: 8px; }
+        .task-name { font-size: 13px; font-weight: 600; }
+        .task-desc { font-size: 11px; color: var(--text2); margin-top: 2px; }
+        .task-reward { font-size: 12px; color: var(--yellow); }
+
+        /* 设置页 */
+        .setting-btn {
+            width: 100%;
+            padding: 14px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            border: 1px solid var(--border);
+            background: var(--card);
+            color: var(--text);
+            cursor: pointer;
+            margin-bottom: 8px;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .setting-btn:hover { border-color: var(--blue); }
+        .setting-btn.danger { border-color: var(--red); color: var(--red); }
+
+        /* 公告横幅 */
+        .announcement {
+            background: linear-gradient(135deg, var(--blue), var(--purple));
+            border-radius: 10px;
+            padding: 12px;
+            margin-bottom: 12px;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+        .announcement .ann-icon { font-size: 20px; }
+
+        /* 成就弹窗 */
+        .achievement-popup {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, var(--yellow), var(--orange));
+            color: #000;
+            padding: 16px 24px;
+            border-radius: 12px;
+            z-index: 300;
+            text-align: center;
+            box-shadow: 0 8px 32px rgba(210, 153, 34, 0.4);
+            animation: achieveIn 0.5s ease;
+        }
+        @keyframes achieveIn {
+            from { transform: translateX(-50%) translateY(-100px); opacity: 0; }
+            to { transform: translateX(-50%) translateY(0); opacity: 1; }
+        }
+        .achievement-popup .ap-icon { font-size: 32px; }
+        .achievement-popup .ap-title { font-size: 14px; font-weight: 700; margin-top: 4px; }
+        .achievement-popup .ap-name { font-size: 16px; font-weight: 800; }
+
+        /* 行情图 */
+        .chart-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 12px;
+        }
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .chart-title { font-size: 14px; font-weight: 600; }
+        .chart-tabs { display: flex; gap: 4px; }
+        .chart-tab {
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            background: transparent;
+            color: var(--text2);
+            border: 1px solid var(--border);
+            cursor: pointer;
+        }
+        .chart-tab.active { background: var(--blue); color: #fff; border-color: var(--blue); }
+        canvas { width: 100%; height: 150px; }
+
+        /* 操作按钮 */
+        .action-bar {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+        .btn {
+            padding: 14px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+        .btn:active { transform: scale(0.97); }
+        .btn-buy { background: var(--green); color: #fff; }
+        .btn-sell { background: var(--red); color: #fff; }
+        .btn-end { background: var(--blue); color: #fff; }
+        .btn-disabled { opacity: 0.5; pointer-events: none; }
+        .btn-full { grid-column: 1 / -1; }
+
+        /* 事件弹窗 */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            padding: 20px;
+        }
+        .modal {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 20px;
+            width: 100%;
+            max-width: 360px;
+            text-align: center;
+        }
+        .modal-icon { font-size: 48px; margin-bottom: 12px; }
+        .modal-title { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+        .modal-desc { font-size: 14px; color: var(--text2); margin-bottom: 16px; line-height: 1.5; }
+        .modal-btn {
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            margin: 4px;
+        }
+        .modal-btn-primary { background: var(--blue); color: #fff; }
+        .modal-btn-secondary { background: var(--border); color: var(--text); }
+
+        /* 交易弹窗 */
+        .trade-input {
+            width: 100%;
+            padding: 12px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            background: var(--bg);
+            color: var(--text);
+            font-size: 16px;
+            margin: 12px 0;
+            text-align: center;
+        }
+        .trade-input:focus { outline: none; border-color: var(--blue); }
+        .trade-label { font-size: 13px; color: var(--text2); }
+        .trade-quick-btns { display: flex; gap: 6px; justify-content: center; margin: 8px 0; }
+        .quick-btn {
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-size: 12px;
+            background: var(--border);
+            color: var(--text);
+            border: none;
+            cursor: pointer;
+        }
+
+        /* 历史记录 */
+        .history-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 12px;
+        }
+        .history-title { font-size: 14px; font-weight: 600; margin-bottom: 8px; }
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border);
+            font-size: 13px;
+        }
+        .history-item:last-child { border-bottom: none; }
+
+        /* 游戏结束 */
+        .game-over { text-align: center; padding: 40px 20px; }
+        .game-over-icon { font-size: 64px; margin-bottom: 16px; }
+        .game-over-title { font-size: 24px; font-weight: 700; margin-bottom: 8px; }
+        .game-over-desc { font-size: 14px; color: var(--text2); margin-bottom: 24px; line-height: 1.6; }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 24px; }
+        .stat-item {
+            background: var(--bg);
+            border-radius: 10px;
+            padding: 12px;
+        }
+        .stat-label { font-size: 11px; color: var(--text2); }
+        .stat-value { font-size: 18px; font-weight: 700; margin-top: 4px; }
+
+        /* 隐藏 */
+        .hidden { display: none !important; }
+
+        /* 设置页 */
+        .settings-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+        }
+        .settings-title { font-size: 16px; font-weight: 600; margin-bottom: 12px; }
+        .setting-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border);
+        }
+        .setting-row:last-child { border-bottom: none; }
+        .setting-label { font-size: 14px; }
+        .setting-value { font-size: 14px; color: var(--text2); }
+        
+        /* 杠杆选择按钮 */
+        .leverage-btn {
+            padding: 6px 12px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: var(--bg);
+            color: var(--text);
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+        .leverage-btn:hover {
+            border-color: var(--blue);
+        }
+        .leverage-btn.active {
+            border-color: var(--blue);
+            background: rgba(88, 166, 255, 0.1);
+        }
+        .leverage-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+        
+        /* 新闻卡片 */
+        .news-item {
+            padding: 8px 12px;
+            border-bottom: 1px solid var(--border);
+            font-size: 13px;
+        }
+        .news-item:last-child { border-bottom: none; }
+        .news-title {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        .news-desc {
+            color: var(--text2);
+            font-size: 12px;
+        }
+        .news-noise { color: var(--text2); }
+        .news-medium { color: var(--yellow); }
+        .news-heavy { color: var(--red); }
+        .news-macro { color: var(--purple); }
+        .news-fake {
+            color: var(--red);
+            font-size: 10px;
+            font-weight: bold;
+        }
+        
+        /* 山寨币标签 */
+        .shitcoin-tag {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: bold;
+        }
+        .shitcoin-moon { background: rgba(210, 153, 34, 0.2); color: var(--yellow); }
+        .shitcoin-safe { background: rgba(63, 185, 80, 0.2); color: var(--green); }
+        .shitcoin-rug { background: rgba(248, 81, 73, 0.2); color: var(--red); }
+    </style>
+</head>
+<body>
+    <div class="container" id="app">
+        <!-- 登录页面 -->
+        <div id="loginPage">
+            <div style="text-align:center; padding: 40px 0;">
+                <div style="font-size:64px; margin-bottom:16px;">₿</div>
+                <h1 style="font-size:24px; margin-bottom:8px;">加密货币冒险</h1>
+                <p style="color:var(--text2); margin-bottom:32px; font-size:14px;">登录后存档自动同步到云端</p>
+
+                <div class="settings-card">
+                    <div class="settings-title" id="loginTitle">登录</div>
+                    <div class="setting-row">
+                        <span class="setting-label">用户名</span>
+                        <input type="text" id="authUsername" placeholder="2-20个字符" style="background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:6px 10px;color:var(--text);width:140px;text-align:right;">
+                    </div>
+                    <div class="setting-row">
+                        <span class="setting-label">密码</span>
+                        <input type="password" id="authPassword" placeholder="至少4位" style="background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:6px 10px;color:var(--text);width:140px;text-align:right;">
+                    </div>
+                    <div id="authError" style="color:var(--red); font-size:12px; margin-top:8px; display:none;"></div>
+                </div>
+
+                <button class="btn btn-buy btn-full" id="authBtn" onclick="doAuth()" style="margin-top:16px;">登录</button>
+                <p style="color:var(--text2); font-size:12px; margin-top:12px; cursor:pointer;" onclick="toggleAuthMode()" id="toggleAuthText">没有账号？点此注册</p>
+
+            </div>
+        </div>
+
+        <!-- 开始页面 -->
+        <div id="startPage">
+            <div style="text-align:center; padding: 40px 0;">
+                <div style="font-size:64px; margin-bottom:16px;">₿</div>
+                <h1 style="font-size:24px; margin-bottom:8px;">加密货币冒险</h1>
+                <p style="color:var(--text2); margin-bottom:24px; font-size:14px;">从1万U到财务自由，你能活多久？</p>
+                <p style="color:var(--text2); font-size:11px; margin-bottom:16px;">b0.116 · 云端存档 · 多设备同步</p>
+
+                <!-- 存档列表 - 有存档时显示在玩家设置上面 -->
+                <div class="settings-card" style="margin-bottom:12px; display:none;" id="saveListCard">
+                    <div class="settings-title">💾 继续游戏 <span style="font-size:12px; color:var(--text2); font-weight:normal;">（点击对应存档进入）</span></div>
+                    <div id="saveList" style="max-height:300px; overflow-y:auto;"></div>
+                </div>
+
+                <div class="settings-card">
+                    <div class="settings-title">玩家设置</div>
+                    <div class="setting-row">
+                        <span class="setting-label">昵称</span>
+                        <input type="text" id="playerName" placeholder="请输入昵称" style="background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:6px 10px;color:var(--text);width:120px;text-align:right;">
+                    </div>
+                    <div class="setting-row">
+                        <span class="setting-label">初始资金</span>
+                        <select id="initFund" style="background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:6px 10px;color:var(--text);">
+                            <option value="5000">5,000 U</option>
+                            <option value="10000" selected>10,000 U</option>
+                            <option value="20000">20,000 U</option>
+                            <option value="50000">50,000 U</option>
+                        </select>
+                    </div>
+                    <div class="setting-row">
+                        <span class="setting-label">游戏天数</span>
+                        <select id="gameDays" style="background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:6px 10px;color:var(--text);">
+                            <option value="30">30天</option>
+                            <option value="60">60天</option>
+                            <option value="90" selected>90天</option>
+                            <option value="180">180天</option>
+                            <option value="365">365天</option>
+                        </select>
+                    </div>
+                    <div class="setting-row">
+                        <span class="setting-label">难度</span>
+                        <select id="difficulty" style="background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:6px 10px;color:var(--text);">
+                            <option value="easy">简单（波动小）</option>
+                            <option value="normal" selected>普通</option>
+                            <option value="hard">困难（波动大）</option>
+                            <option value="extreme">地狱（高波动+黑天鹅）</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button class="btn btn-buy btn-full" onclick="startGame()" style="margin-top:16px;">开始冒险 🚀</button>
+
+                <!-- 历史最佳 -->
+                <div class="settings-card" style="margin-top:12px;">
+                    <div class="settings-title">🏆 历史最佳</div>
+                    <div id="bestRecord" style="text-align:center; color:var(--text2); font-size:13px; padding:12px;">暂无记录</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 游戏主界面 -->
+        <div id="gamePage" class="hidden">
+            <!-- 公告横幅 -->
+            <div class="announcement" id="announcement" onclick="this.style.display='none'">
+                <span class="ann-icon">📢</span>
+                <span>欢迎来到加密货币冒险！完成每日任务获得额外奖励 🎁</span>
+            </div>
+
+            <!-- 状态栏 -->
+            <div class="status-bar">
+                <div class="status-row">
+                    <span class="day-label">📅 第 <span id="dayNum">1</span> / <span id="totalDays">90</span> 天</span>
+                    <span class="day-label" id="dateLabel">2026-01-01</span>
+                </div>
+                <div class="status-row">
+                    <span>💰 总资产</span>
+                    <span class="day-value" id="totalAsset">$10,000</span>
+                </div>
+                <div class="status-row">
+                    <span>📊 收益率</span>
+                    <span class="day-value" id="pnlPercent">+0.00%</span>
+                </div>
+            </div>
+
+            <!-- 资产卡片 -->
+            <div class="asset-cards">
+                <div class="asset-card">
+                    <div class="asset-name">💵 USDT 余额</div>
+                    <div class="asset-amount" id="usdtBalance">$10,000</div>
+                </div>
+                <div class="asset-card">
+                    <div class="asset-name">₿ BTC 持仓</div>
+                    <div class="asset-amount" id="btcHold">0.0000</div>
+                    <div class="asset-usd" id="btcValue">$0</div>
+                </div>
+                <div class="asset-card">
+                    <div class="asset-name">⟠ ETH 持仓</div>
+                    <div class="asset-amount" id="ethHold">0.0000</div>
+                    <div class="asset-usd" id="ethValue">$0</div>
+                </div>
+                <div class="asset-card">
+                    <div class="asset-name">🪙 SOL 持仓</div>
+                    <div class="asset-amount" id="solHold">0.00</div>
+                    <div class="asset-usd" id="solValue">$0</div>
+                </div>
+            </div>
+
+            <!-- 行情 -->
+            <div class="chart-card">
+                <div class="chart-header">
+                    <span class="chart-title" id="chartCoin">BTC/USDT</span>
+                    <div class="chart-tabs">
+                        <div class="chart-tab active" onclick="switchChart('btc')">BTC</div>
+                        <div class="chart-tab" onclick="switchChart('eth')">ETH</div>
+                        <div class="chart-tab" onclick="switchChart('sol')">SOL</div>
+                    </div>
+                </div>
+                <canvas id="priceChart"></canvas>
+                <div style="text-align:center; margin-top:8px;">
+                    <span style="font-size:24px; font-weight:700;" id="currentPrice">$82,000</span>
+                    <span class="price-change" id="priceChange">+0.00%</span>
+                </div>
+            </div>
+
+            <!-- 操作 -->
+            <div class="action-bar">
+                <button class="btn btn-buy" onclick="openTrade('buy')">买入</button>
+                <button class="btn btn-sell" onclick="openTrade('sell')">卖出</button>
+                <button class="btn btn-end btn-full" onclick="endDay()">结束今天 ▶</button>
+            </div>
+
+            <!-- 最近交易 -->
+            <div class="history-card">
+                <div class="history-title">📋 最近交易</div>
+                <div id="historyList">
+                    <div style="text-align:center; color:var(--text2); padding:20px; font-size:13px;">暂无交易记录</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 成就页面 -->
+        <div id="achievePage" class="page">
+            <div class="settings-card">
+                <div class="settings-title">🏆 成就系统</div>
+                <p style="font-size:12px; color:var(--text2); margin-bottom:12px;">完成特定目标解锁成就，点亮所有徽章！</p>
+                <div class="achievement-grid" id="achieveGrid"></div>
+            </div>
+        </div>
+
+        <!-- 排行榜页面 -->
+        <div id="rankPage" class="page">
+            <div class="settings-card">
+                <div class="settings-title">📊 历史战绩</div>
+                <div id="rankList"></div>
+            </div>
+        </div>
+
+        <!-- 每日任务页面 -->
+        <div id="taskPage" class="page">
+            <div class="settings-card">
+                <div class="settings-title">📋 每日任务</div>
+                <p style="font-size:12px; color:var(--text2); margin-bottom:12px;">完成任务获得额外USDT奖励</p>
+                <div id="taskList"></div>
+            </div>
+        </div>
+
+        <!-- 道具页面 -->
+        <div id="itemPage" class="page">
+            <div class="settings-card">
+                <div class="settings-title">🎒 道具商店</div>
+                <p style="font-size:12px; color:var(--text2); margin-bottom:12px;">用USDT购买道具，提升游戏体验</p>
+                <div id="itemList"></div>
+            </div>
+            <div class="settings-card" style="margin-top:12px;">
+                <div class="settings-title">📦 我的道具</div>
+                <div id="myItemList"></div>
+            </div>
+        </div>
+
+        <!-- 设置页面 -->
+        <div id="settingPage" class="page">
+            <div class="settings-card">
+                <div class="settings-title">⚙️ 设置</div>
+                <button class="setting-btn" onclick="backToHome()" style="margin-bottom:12px;">🏠 返回主页</button>
+                <div id="userInfoCard" class="settings-card" style="margin-bottom:12px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span>当前用户</span>
+                        <span id="currentUser" style="color:var(--blue); font-weight:600;">未登录</span>
+                    </div>
+                    <button class="setting-btn" onclick="logout()" style="margin-top:8px;">退出登录</button>
+                </div>
+                <button class="setting-btn" onclick="exportSave()">📤 导出存档</button>
+                <button class="setting-btn" onclick="importSave()">📥 导入存档</button>
+                <button class="setting-btn" onclick="showTutorial()">📖 查看教程</button>
+                <button class="setting-btn" onclick="showChangelog()">📝 更新日志</button>
+                <div style="text-align:center; color:var(--text2); font-size:11px; margin-top:16px;">b0.116 · 加密货币冒险</div>
+            </div>
+        </div>
+
+        <!-- 底部导航栏（游戏内） -->
+        <div class="tab-bar hidden" id="tabBar">
+            <div class="tab-item active" onclick="switchTab('game')">
+                <span class="tab-icon">📈</span>
+                交易
+            </div>
+            <div class="tab-item" onclick="switchTab('task')">
+                <span class="tab-icon">📋</span>
+                任务
+            </div>
+            <div class="tab-item" onclick="switchTab('item')">
+                <span class="tab-icon">🎒</span>
+                道具
+            </div>
+            <div class="tab-item" onclick="switchTab('achieve')">
+                <span class="tab-icon">🏆</span>
+                成就
+            </div>
+            <div class="tab-item" onclick="switchTab('setting')">
+                <span class="tab-icon">⚙️</span>
+                设置
+            </div>
+        </div>
+
+        <!-- 游戏结束页面 -->
+        <div id="endPage" class="hidden"></div>
+    </div>
+
+    <!-- 交易弹窗 -->
+    <div id="tradeModal" class="modal-overlay hidden" onclick="closeTrade(event)">
+        <div class="modal" onclick="event.stopPropagation()">
+            <div class="modal-icon" id="tradeIcon">🟢</div>
+            <div class="modal-title" id="tradeTitle">买入 BTC</div>
+            <div class="trade-label">选择币种</div>
+            <div style="display:flex; gap:4px; justify-content:center; flex-wrap:wrap; margin:8px 0;">
+                <button class="quick-btn" id="tradeBtcBtn" onclick="selectTradeCoin('btc')" style="border:1px solid var(--blue);">BTC</button>
+                <button class="quick-btn" id="tradeEthBtn" onclick="selectTradeCoin('eth')">ETH</button>
+                <button class="quick-btn" id="tradeSolBtn" onclick="selectTradeCoin('sol')">SOL</button>
+                <button class="quick-btn" id="tradeMoonBtn" onclick="selectTradeCoin('moon')" style="border:1px solid var(--yellow);">MOON</button>
+                <button class="quick-btn" id="tradeSafeBtn" onclick="selectTradeCoin('safe')" style="border:1px solid var(--green);">SAFE</button>
+                <button class="quick-btn" id="tradeRugBtn" onclick="selectTradeCoin('rug')" style="border:1px solid var(--red);">RUG</button>
+                <button class="quick-btn" id="tradeXauBtn" onclick="selectTradeCoin('xau')" style="border:1px solid var(--yellow);">黄金</button>
+                <button class="quick-btn" id="tradeXagBtn" onclick="selectTradeCoin('xag')" style="border:1px solid var(--yellow);">白银</button>
+            </div>
+            <div class="trade-label">杠杆倍数</div>
+            <div style="display:flex; gap:6px; justify-content:center; margin:8px 0;">
+                <button class="leverage-btn" onclick="setLeverage(1)" style="border:1px solid var(--blue);">1x</button>
+                <button class="leverage-btn" onclick="setLeverage(2)">2x</button>
+                <button class="leverage-btn" onclick="setLeverage(5)">5x</button>
+                <button class="leverage-btn" onclick="setLeverage(10)">10x</button>
+                <button class="leverage-btn" onclick="setLeverage(20)">20x</button>
+            </div>
+            <div class="trade-label" id="tradeAmountLabel">输入USDT金额</div>
+            <input type="number" class="trade-input" id="tradeAmount" placeholder="0.00" oninput="updateTradePreview()">
+            <div class="trade-quick-btns">
+                <button class="quick-btn" onclick="setTradePercent(25)">25%</button>
+                <button class="quick-btn" onclick="setTradePercent(50)">50%</button>
+                <button class="quick-btn" onclick="setTradePercent(75)">75%</button>
+                <button class="quick-btn" onclick="setTradePercent(100)">100%</button>
+            </div>
+            <div class="trade-label">止盈止损</div>
+            <div style="display:flex; gap:4px; justify-content:center; margin:4px 0;">
+                <select id="takeProfitSelect" style="padding:4px; border-radius:4px; background:var(--bg); color:var(--text); border:1px solid var(--border); font-size:12px;">
+                    <option value="0">不止盈</option>
+                    <option value="10">+10%</option>
+                    <option value="30">+30%</option>
+                    <option value="100">+100%</option>
+                </select>
+                <select id="stopLossSelect" style="padding:4px; border-radius:4px; background:var(--bg); color:var(--text); border:1px solid var(--border); font-size:12px;">
+                    <option value="0">不止损</option>
+                    <option value="5">-5%</option>
+                    <option value="15">-15%</option>
+                    <option value="30">-30%</option>
+                </select>
+            </div>
+            <div style="font-size:13px; color:var(--text2); margin:8px 0;" id="tradePreview">预计买入 0.0000 BTC</div>
+            <div style="font-size:12px; color:var(--text2);" id="feePreview">手续费: $0.00</div>
+            <div style="display:flex; gap:8px; margin-top:12px;">
+                <button class="modal-btn modal-btn-secondary" style="flex:1;" onclick="closeTrade()">取消</button>
+                <button class="modal-btn modal-btn-primary" style="flex:1;" id="tradeConfirmBtn" onclick="confirmTrade()">确认买入</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 事件弹窗 -->
+    <div id="eventModal" class="modal-overlay hidden">
+        <div class="modal">
+            <div class="modal-icon" id="eventIcon">📰</div>
+            <div class="modal-title" id="eventTitle">事件标题</div>
+            <div class="modal-desc" id="eventDesc">事件描述</div>
+            <div id="eventChoices"></div>
+        </div>
+    </div>
+
+    <!-- 结算弹窗 -->
+    <div id="summaryModal" class="modal-overlay hidden">
+        <div class="modal">
+            <div class="modal-icon">📊</div>
+            <div class="modal-title">今日结算</div>
+            <div id="summaryContent" style="text-align:left; font-size:14px; margin:12px 0;"></div>
+            <button class="modal-btn modal-btn-primary" style="width:100%;" onclick="closeSummary()">进入下一天</button>
+        </div>
+    </div>
+
+    <script>
+    // ========== 游戏状态 ==========
+    let G = {
+        player: '',
+        day: 1,
+        totalDays: 90,
+        difficulty: 'normal',
+        usdt: 10000,
+        initFund: 10000,
+        holdings: { btc: 0, eth: 0, sol: 0, moon: 0, safe: 0, rug: 0, xau: 0, xag: 0 },
+        prices: { btc: 82000, eth: 2600, sol: 180, moon: 0.001, safe: 0.01, rug: 0.0001, xau: 2350, xag: 28 },
+        priceHistory: { btc: [], eth: [], sol: [], moon: [], safe: [], rug: [], xau: [], xag: [] },
+        events: [],
+        trades: [],
+        dayReturns: [],
+        peakAsset: 10000,
+        maxDrawdown: 0,
+        wins: 0,
+        losses: 0,
+        eventHistory: [],
+        leverage: { btc: 1, eth: 1, sol: 1, moon: 1, safe: 1, rug: 1 },
+        margin: { btc: 0, eth: 0, sol: 0, moon: 0, safe: 0, rug: 0 },
+        stopLoss: { btc: 0, eth: 0, sol: 0, moon: 0, safe: 0, rug: 0 },
+        takeProfit: { btc: 0, eth: 0, sol: 0, moon: 0, safe: 0, rug: 0 },
+        totalFees: 0,
+        news: [],
+        npcs: [],
+        marketMaker: { mood: 'neutral', target: null, cooldown: 0 }
+    };
+
+    let currentChart = 'btc';
+    let tradeMode = 'buy';
+    let tradeCoin = 'btc';
+    let authToken = localStorage.getItem('crypto_adventure_token');
+    let authUsername = localStorage.getItem('crypto_adventure_username');
+    let isOfflineMode = false;
+
+    // ========== 后端API ==========
+    // 后端API地址 - 根据访问方式自动切换
+    let API_BASE;
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        API_BASE = 'http://localhost:5000/api';
+    } else {
+        // 通过tunnel访问时，使用后端tunnel地址
+        API_BASE = 'https://interactions-floors-country-backup.trycloudflare.com/api';
+    }
+
+    async function apiCall(endpoint, data = null) {
+        try {
+            const options = {
+                method: data ? 'POST' : 'GET',
+                headers: { 'Content-Type': 'application/json' }
+            };
+            if (data) options.body = JSON.stringify(data);
+            const resp = await fetch(API_BASE + endpoint, options);
+            return await resp.json();
+        } catch(e) {
+            console.error('API call failed:', e);
+            return { error: '网络错误，请检查后端是否运行' };
+        }
+    }
+
+    // ========== 登录系统 ==========
+    let isLoginMode = true;
+
+    function toggleAuthMode() {
+        isLoginMode = !isLoginMode;
+        document.getElementById('loginTitle').textContent = isLoginMode ? '登录' : '注册';
+        document.getElementById('authBtn').textContent = isLoginMode ? '登录' : '注册';
+        document.getElementById('toggleAuthText').textContent = isLoginMode ? '没有账号？点此注册' : '已有账号？点此登录';
+        document.getElementById('authError').style.display = 'none';
+    }
+
+    async function doAuth() {
+        const username = document.getElementById('authUsername').value.trim();
+        const password = document.getElementById('authPassword').value;
+        const errorEl = document.getElementById('authError');
+
+        if (!username || !password) {
+            errorEl.textContent = '请输入用户名和密码';
+            errorEl.style.display = 'block';
+            return;
+        }
+
+        const endpoint = isLoginMode ? '/login' : '/register';
+        const result = await apiCall(endpoint, { username, password });
+
+        if (result.error) {
+            errorEl.textContent = result.error;
+            errorEl.style.display = 'block';
+            return;
+        }
+
+        // 登录/注册成功
+        authToken = result.token;
+        authUsername = result.username;
+        localStorage.setItem('crypto_adventure_token', authToken);
+        localStorage.setItem('crypto_adventure_username', authUsername);
+
+        showNotification(isLoginMode ? '登录成功！' : '注册成功！');
+        document.getElementById('loginPage').classList.add('hidden');
+        document.getElementById('startPage').classList.remove('hidden');
+        updateUserInfo();
+        loadServerSaves();
+    }
+
+
+    function updateUserInfo() {
+        const el = document.getElementById('currentUser');
+        if (isOfflineMode) {
+            el.textContent = '离线模式';
+            el.style.color = 'var(--text2)';
+        } else if (authUsername) {
+            el.textContent = authUsername;
+            el.style.color = 'var(--blue)';
+        } else {
+            el.textContent = '未登录';
+            el.style.color = 'var(--text2)';
+        }
+    }
+
+    function logout() {
+        if (!confirm('确定退出登录？')) return;
+        authToken = null;
+        authUsername = null;
+        isOfflineMode = false;
+        localStorage.removeItem('crypto_adventure_token');
+        localStorage.removeItem('crypto_adventure_username');
+        location.reload();
+    }
+
+    // 检查是否已登录
+    if (authToken) {
+        document.getElementById('loginPage').classList.add('hidden');
+        document.getElementById('startPage').classList.remove('hidden');
+        updateUserInfo();
+        loadServerSaves();
+    }
+
+    // 加载服务器存档
+    async function loadServerSaves() {
+        if (!authToken || isOfflineMode) {
+            renderSaveList();
+            renderBestRecord();
+            return;
+        }
+        const result = await apiCall('/saves', { token: authToken });
+        if (result.saves) {
+            renderServerSaveList(result.saves);
+        }
+    }
+
+    function renderServerSaveList(saves) {
+        const container = document.getElementById('saveList');
+        const saveListCard = document.getElementById('saveListCard');
+        
+        if (saves.length === 0) {
+            if (saveListCard) saveListCard.style.display = 'none';
+            return;
+        }
+        
+        if (saveListCard) saveListCard.style.display = 'block';
+        
+        container.innerHTML = saves.map(s => {
+            const date = new Date(s.updated_at).toLocaleString('zh-CN');
+            const pnl = s.total_asset ? ((s.total_asset / 10000) - 1) * 100 : 0;
+            return `
+                <div class="history-item" style="cursor:pointer;" onclick="loadServerSave('${s.slot_name}')">
+                    <div>
+                        <div style="font-weight:600;">第${s.day}天 · ${s.difficulty}</div>
+                        <div style="font-size:11px; color:var(--text2);">${date}</div>
+                    </div>
+                    <div style="text-align:right;">
+                        <div class="${pnl >= 0 ? 'pnl-positive' : 'pnl-negative'}">$${formatNum(s.total_asset || 0)}</div>
+                        <div style="font-size:11px; color:var(--text2);">${pnl >= 0 ? '+' : ''}${pnl.toFixed(1)}%</div>
+                    </div>
+                    <button onclick="event.stopPropagation(); deleteServerSave('${s.slot_name}')" style="background:var(--red); border:none; color:white; padding:4px 8px; border-radius:4px; font-size:11px; margin-left:8px;">删除</button>
+                </div>
+            `;
+        }).join('');
+    }
+
+    async function loadServerSave(slotName) {
+        const result = await apiCall('/load', { token: authToken, slot_name: slotName });
+        if (result.game_data) {
+            G = { ...result.game_data };
+            currentSaveSlot = slotName;
+            document.getElementById('startPage').classList.add('hidden');
+            document.getElementById('gamePage').classList.remove('hidden');
+            document.getElementById('tabBar').classList.remove('hidden');
+            updateUI();
+            showNotification('云端存档已加载！');
+        }
+    }
+
+    async function deleteServerSave(slotName) {
+        if (!confirm('确定删除这个存档？')) return;
+        await apiCall('/save/delete', { token: authToken, slot_name: slotName });
+        showNotification('删除成功');
+        loadServerSaves();
+    }
+
+    // ========== 市场模拟引擎 ==========
+    const DIFFICULTY = {
+        easy: { vol: 0.015, eventChance: 0.15, blackSwanChance: 0.01 },
+        normal: { vol: 0.025, eventChance: 0.2, blackSwanChance: 0.03 },
+        hard: { vol: 0.04, eventChance: 0.3, blackSwanChance: 0.05 },
+        extreme: { vol: 0.06, eventChance: 0.4, blackSwanChance: 0.08 }
+    };
+
+    function getDiff() { return DIFFICULTY[G.difficulty]; }
+
+    function simulatePrice(base, day, coin) {
+        // 真实波动率设置
+        const volatility = {
+            btc: { normal: 0.02, big: 0.05, extreme: 0.10 },
+            eth: { normal: 0.035, big: 0.08, extreme: 0.15 },
+            sol: { normal: 0.05, big: 0.12, extreme: 0.25 },
+            moon: { normal: 0.10, big: 0.30, extreme: 0.80 },
+            safe: { normal: 0.08, big: 0.25, extreme: 0.60 },
+            rug: { normal: 0.15, big: 0.50, extreme: 0.95 },
+            xau: { normal: 0.008, big: 0.02, extreme: 0.05 },
+            xag: { normal: 0.012, big: 0.03, extreme: 0.08 }
+        };
+        
+        const vol = volatility[coin] || volatility.btc;
+        const eventChance = Math.random();
+        let change;
+        
+        if (eventChance < 0.01) {
+            change = (Math.random() - 0.5) * 2 * vol.extreme;
+        } else if (eventChance < 0.05) {
+            change = (Math.random() - 0.5) * 2 * vol.big;
+        } else {
+            change = (Math.random() - 0.5) * 2 * vol.normal;
+        }
+        
+        // 庄家AI影响（针对山寨币）
+        if (['moon', 'safe', 'rug'].includes(coin) && G.marketMaker.target === coin) {
+            if (G.marketMaker.mood === 'bullish') {
+                change += 0.05;
+            } else if (G.marketMaker.mood === 'bearish') {
+                change -= 0.08;
+            }
+        }
+        
+        return Math.max(base * (1 + change), base * 0.01);
+    }
+
+    // ========== 事件系统 ==========
+    const EVENTS = [
+        { id: 'bull_run', icon: '🚀', title: '牛市信号！', desc: '主流媒体开始报道加密货币暴涨，大量散户入场。', effect: { type: 'pump', coins: ['btc','eth','sol'], range: [0.05, 0.15] }, choices: [
+            { text: '跟风加仓', effect: 'fomo' },
+            { text: '保持冷静', effect: 'calm' }
+        ]},
+        { id: 'crash', icon: '💥', title: '闪崩！', desc: '某交易所疑似被黑，市场恐慌性抛售。', effect: { type: 'dump', coins: ['btc','eth','sol'], range: [-0.12, -0.05] }, choices: [
+            { text: '恐慌卖出', effect: 'panic_sell' },
+            { text: '抄底！', effect: 'catch_bottom' },
+            { text: '不动', effect: 'hold' }
+        ]},
+        { id: 'whale', icon: '🐋', title: '巨鲸动向', desc: '链上数据显示，某巨鲸转入10万枚BTC到交易所。', effect: { type: 'dump', coins: ['btc'], range: [-0.08, -0.03] }, choices: [
+            { text: '跟着卖', effect: 'follow_whale' },
+            { text: '逆向操作', effect: 'counter_whale' }
+        ]},
+        { id: 'regulation', icon: '🏛️', title: '监管消息', desc: 'SEC宣布对某交易所进行调查。', effect: { type: 'dump', coins: ['btc','eth','sol'], range: [-0.06, -0.02] }, choices: [
+            { text: '合规最重要，减仓', effect: 'reduce' },
+            { text: 'FUD而已，不理会', effect: 'ignore' }
+        ]},
+        { id: 'tech_break', icon: '🔧', title: '技术突破', desc: 'ETH完成重大升级，Gas费降低90%。', effect: { type: 'pump', coins: ['eth'], range: [0.08, 0.2] }, choices: [
+            { text: '加仓ETH', effect: 'buy_eth' },
+            { text: '已经涨了，观望', effect: 'wait' }
+        ]},
+        { id: 'meme_season', icon: '🐸', title: 'Meme币狂潮', desc: '一个叫$PEPE2.0的币一天涨了10倍。', effect: { type: 'neutral', coins: ['sol'], range: [0.03, 0.1] }, choices: [
+            { text: 'All in Meme币！', effect: 'meme_yolo' },
+            { text: '不碰，太危险', effect: 'meme_skip' }
+        ]},
+        { id: 'fed_rate', icon: '🏦', title: '美联储议息', desc: '美联储宣布利率决议，市场屏息以待。', effect: { type: 'random', coins: ['btc','eth','sol'], range: [-0.05, 0.08] }, choices: [
+            { text: '提前减仓避险', effect: 'reduce_before' },
+            { text: '赌利好，加仓', effect: 'bet_good' }
+        ]},
+        { id: 'exchange_hack', icon: '💀', title: '交易所被黑！', desc: '某小型交易所被盗5亿美元，用户资金无法提取。', effect: { type: 'dump', coins: ['btc','eth','sol'], range: [-0.1, -0.04] }, choices: [
+            { text: '提币到钱包', effect: 'withdraw' },
+            { text: '大交易所应该安全', effect: 'trust' }
+        ]},
+        { id: 'elon_tweet', icon: '🐦', title: '马斯克发推', desc: '马斯克发了一条"BTC🚀"的推文。', effect: { type: 'pump', coins: ['btc'], range: [0.03, 0.08] }, choices: [
+            { text: '跟着买', effect: 'follow_elon' },
+            { text: '又是炒作', effect: 'ignore' }
+        ]},
+        { id: 'airdrop', icon: '🎁', title: '空投来袭！', desc: '你符合某个新项目的空投资格！', effect: { type: 'bonus', coins: [], range: [0, 0] }, choices: [
+            { text: '领取空投', effect: 'claim_airdrop' },
+            { text: '可能是钓鱼，不领', effect: 'skip_airdrop' }
+        ]},
+        { id: 'friend_call', icon: '📱', title: '朋友来电', desc: '"兄弟！我刚梭哈了一个币，你也快买！"', effect: { type: 'neutral', coins: [], range: [0, 0] }, choices: [
+            { text: '相信朋友，买！', effect: 'trust_friend' },
+            { text: '谢谢，我自己判断', effect: 'decline_friend' }
+        ]},
+        { id: 'stable_coin', icon: '💵', title: '稳定币脱锚', desc: 'USDT短暂脱锚到$0.95，市场恐慌。', effect: { type: 'dump', coins: ['btc','eth','sol'], range: [-0.05, -0.02] }, choices: [
+            { text: '换USDC避险', effect: 'switch_stable' },
+            { text: 'USDT会恢复的', effect: 'trust_usdt' }
+        ]},
+        { id: 'nft_craze', icon: '🎨', title: 'NFT热潮', desc: '某蓝筹NFT项目空投代币，持有者暴富。', effect: { type: 'pump', coins: ['eth'], range: [0.03, 0.06] }, choices: [
+            { text: '买ETH参与', effect: 'buy_eth_nft' },
+            { text: 'NFT泡沫，不参与', effect: 'skip_nft' }
+        ]},
+        { id: 'layer2', icon: '⛓️', title: 'L2爆发', desc: 'Arbitrum和Optimism链上TVL暴涨。', effect: { type: 'pump', coins: ['eth'], range: [0.04, 0.1] }, choices: [
+            { text: '加仓ETH', effect: 'buy_eth_l2' },
+            { text: '观望', effect: 'wait' }
+        ]},
+        { id: 'mining', icon: '⛏️', title: '矿工投降', desc: 'BTC矿工大量抛售，算力下降。', effect: { type: 'dump', coins: ['btc'], range: [-0.06, -0.02] }, choices: [
+            { text: '短期利空，卖', effect: 'sell_mining' },
+            { text: '长期利好，买', effect: 'buy_mining' }
+        ]}
+    ];
+
+    const BLACK_SWAN = [
+        { id: 'ftx', icon: '💀', title: '交易所暴雷！', desc: '全球前三交易所被曝挪用用户资金，创始人被捕！市场崩盘！', effect: { type: 'dump', coins: ['btc','eth','sol'], range: [-0.25, -0.15] }, choices: [
+            { text: '全部清仓！', effect: 'panic_all' },
+            { text: '提币到冷钱包', effect: 'withdraw_cold' },
+            { text: '抄底！', effect: 'catch_ftx' }
+        ]},
+        { id: 'war', icon: '⚔️', title: '地缘冲突', desc: '某大国爆发军事冲突，全球资产暴跌。', effect: { type: 'dump', coins: ['btc','eth','sol'], range: [-0.2, -0.1] }, choices: [
+            { text: '避险，清仓', effect: 'flee' },
+            { text: 'BTC是数字黄金', effect: 'hold_btc' }
+        ]},
+        { id: 'tether', icon: '💣', title: 'USDT暴雷传闻', desc: '有媒体爆料Tether储备不足，USDT可能脱锚！', effect: { type: 'dump', coins: ['btc','eth','sol'], range: [-0.15, -0.08] }, choices: [
+            { text: '全部换BTC', effect: 'swap_btc' },
+            { text: '换USDC', effect: 'swap_usdc' },
+            { text: 'FUD，不理会', effect: 'ignore_tether' }
+        ]}
+    ];
+
+    function triggerEvent() {
+        const d = getDiff();
+        const roll = Math.random();
+
+        if (roll < d.blackSwanChance && G.day > 10) {
+            // 黑天鹅
+            const evt = BLACK_SWAN[Math.floor(Math.random() * BLACK_SWAN.length)];
+            showEvent(evt);
+        } else if (roll < d.eventChance) {
+            // 普通事件
+            const evt = EVENTS[Math.floor(Math.random() * EVENTS.length)];
+            if (!G.eventHistory.includes(evt.id) || Math.random() < 0.3) {
+                showEvent(evt);
+                G.eventHistory.push(evt.id);
+            }
+        }
+    }
+
+    function showEvent(evt) {
+        // 应用价格效果
+        if (evt.effect.type === 'pump' || evt.effect.type === 'dump' || evt.effect.type === 'random') {
+            evt.effect.coins.forEach(coin => {
+                const [min, max] = evt.effect.range;
+                const change = min + Math.random() * (max - min);
+                G.prices[coin] = Math.max(G.prices[coin] * (1 + change), 1);
+            });
+        }
+
+        document.getElementById('eventIcon').textContent = evt.icon;
+        document.getElementById('eventTitle').textContent = evt.title;
+        document.getElementById('eventDesc').textContent = evt.desc;
+
+        const choicesDiv = document.getElementById('eventChoices');
+        choicesDiv.innerHTML = '';
+        evt.choices.forEach((c, i) => {
+            const btn = document.createElement('button');
+            btn.className = 'modal-btn ' + (i === 0 ? 'modal-btn-primary' : 'modal-btn-secondary');
+            btn.style.cssText = 'width:100%; margin:4px 0;';
+            btn.textContent = c.text;
+            btn.onclick = () => handleEventChoice(evt, c.effect);
+            choicesDiv.appendChild(btn);
+        });
+
+        document.getElementById('eventModal').classList.remove('hidden');
+    }
+
+    function handleEventChoice(evt, effect) {
+        let msg = '';
+
+        switch(effect) {
+            case 'fomo':
+                msg = '你FOMO加仓了！结果...';
+                if (Math.random() > 0.5) {
+                    msg += '涨了！赚了一笔 🎉';
+                    G.usdt *= 0.9;
+                    addRandomHoldings(0.1);
+                } else {
+                    msg += '跌了，亏了一点 😢';
+                    G.usdt *= 0.85;
+                }
+                break;
+            case 'panic_sell':
+                msg = '你恐慌卖出了！';
+                const sold = G.holdings;
+                G.holdings = { btc: 0, eth: 0, sol: 0 };
+                Object.keys(sold).forEach(c => {
+                    G.usdt += sold[c] * G.prices[c];
+                });
+                msg += '全部变现为USDT';
+                break;
+            case 'catch_bottom':
+                msg = '你选择抄底！';
+                if (Math.random() > 0.4) {
+                    msg += '猜对了，反弹了 🎉';
+                    addRandomHoldings(0.15);
+                } else {
+                    msg += '还在跌，继续亏 😢';
+                }
+                break;
+            case 'claim_airdrop':
+                const airdropValue = Math.floor(Math.random() * 500) + 100;
+                G.usdt += airdropValue;
+                msg = `领取空投成功！获得 $${airdropValue} 🎁`;
+                break;
+            case 'meme_yolo':
+                msg = '你All in了Meme币！';
+                if (Math.random() > 0.7) {
+                    const mult = Math.floor(Math.random() * 5) + 2;
+                    G.usdt *= mult;
+                    msg += `${mult}倍！暴富！🚀`;
+                } else {
+                    G.usdt *= 0.3;
+                    msg += '归零了... 💀';
+                }
+                break;
+            case 'trust_friend':
+                msg = '你听了朋友的推荐！';
+                if (Math.random() > 0.6) {
+                    msg += '这次朋友靠谱，赚了 👍';
+                    addRandomHoldings(0.2);
+                } else {
+                    msg += '被朋友坑了... 💔';
+                    G.usdt *= 0.8;
+                }
+                break;
+            default:
+                msg = '你做出了选择，静观其变...';
+        }
+
+        document.getElementById('eventModal').classList.add('hidden');
+        autoSave();
+
+        // 显示结果
+        setTimeout(() => {
+            showNotification(msg);
+            updateUI();
+        }, 300);
+    }
+
+    function addRandomHoldings(pct) {
+        const coins = ['btc', 'eth', 'sol'];
+        const coin = coins[Math.floor(Math.random() * coins.length)];
+        const amount = (G.usdt * pct) / G.prices[coin];
+        G.holdings[coin] += amount;
+        G.usdt -= G.usdt * pct;
+    }
+
+    // ========== UI 更新 ==========
+    function updateUI() {
+        const totalAsset = calcTotalAsset();
+        const pnl = totalAsset - G.initFund;
+        const pnlPct = ((totalAsset / G.initFund) - 1) * 100;
+
+        document.getElementById('dayNum').textContent = G.day;
+        document.getElementById('totalDays').textContent = G.totalDays;
+        document.getElementById('dateLabel').textContent = getGameDate();
+        document.getElementById('totalAsset').textContent = '$' + formatNum(totalAsset);
+        document.getElementById('usdtBalance').textContent = '$' + formatNum(G.usdt);
+
+        document.getElementById('btcHold').textContent = G.holdings.btc.toFixed(4);
+        document.getElementById('btcValue').textContent = '$' + formatNum(G.holdings.btc * G.prices.btc);
+        document.getElementById('ethHold').textContent = G.holdings.eth.toFixed(4);
+        document.getElementById('ethValue').textContent = '$' + formatNum(G.holdings.eth * G.prices.eth);
+        document.getElementById('solHold').textContent = G.holdings.sol.toFixed(2);
+        document.getElementById('solValue').textContent = '$' + formatNum(G.holdings.sol * G.prices.sol);
+
+        const pnlEl = document.getElementById('pnlPercent');
+        pnlEl.textContent = (pnl >= 0 ? '+' : '') + pnlPct.toFixed(2) + '%';
+        pnlEl.className = 'day-value ' + (pnl >= 0 ? 'pnl-positive' : 'pnl-negative');
+
+        // 更新最大回撤
+        if (totalAsset > G.peakAsset) G.peakAsset = totalAsset;
+        const dd = (G.peakAsset - totalAsset) / G.peakAsset;
+        if (dd > G.maxDrawdown) G.maxDrawdown = dd;
+
+        // 更新价格显示
+        updatePriceDisplay();
+        drawChart();
+    }
+
+    function updatePriceDisplay() {
+        const coin = currentChart;
+        const price = G.prices[coin];
+        const history = G.priceHistory[coin];
+
+        document.getElementById('currentPrice').textContent = '$' + formatNum(price);
+
+        if (history.length > 1) {
+            const prev = history[history.length - 2];
+            const change = ((price / prev) - 1) * 100;
+            const changeEl = document.getElementById('priceChange');
+            changeEl.textContent = (change >= 0 ? '+' : '') + change.toFixed(2) + '%';
+            changeEl.className = 'price-change ' + (change >= 0 ? 'pnl-positive' : 'pnl-negative');
+        }
+
+        document.getElementById('chartCoin').textContent = coin.toUpperCase() + '/USDT';
+    }
+
+    function switchChart(coin) {
+        currentChart = coin;
+        document.querySelectorAll('.chart-tab').forEach(t => t.classList.remove('active'));
+        event.target.classList.add('active');
+        updatePriceDisplay();
+        drawChart();
+    }
+
+    // ========== 画图 ==========
+    function drawChart() {
+        const canvas = document.getElementById('priceChart');
+        const ctx = canvas.getContext('2d');
+        const dpr = window.devicePixelRatio || 1;
+
+        canvas.width = canvas.offsetWidth * dpr;
+        canvas.height = 150 * dpr;
+        ctx.scale(dpr, dpr);
+
+        const w = canvas.offsetWidth;
+        const h = 150;
+        const data = G.priceHistory[currentChart];
+
+        if (data.length < 2) {
+            ctx.clearRect(0, 0, w, h);
+            return;
+        }
+
+        const min = Math.min(...data) * 0.998;
+        const max = Math.max(...data) * 1.002;
+        const range = max - min || 1;
+
+        // 背景
+        ctx.clearRect(0, 0, w, h);
+
+        // 渐变填充
+        const gradient = ctx.createLinearGradient(0, 0, 0, h);
+        const lastPrice = data[data.length - 1];
+        const firstPrice = data[0];
+        const isUp = lastPrice >= firstPrice;
+
+        gradient.addColorStop(0, isUp ? 'rgba(63,185,80,0.3)' : 'rgba(248,81,73,0.3)');
+        gradient.addColorStop(1, 'rgba(0,0,0,0)');
+
+        // 画线
+        ctx.beginPath();
+        data.forEach((p, i) => {
+            const x = (i / (data.length - 1)) * w;
+            const y = h - ((p - min) / range) * (h - 20) - 10;
+            if (i === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+        });
+        ctx.strokeStyle = isUp ? '#3fb950' : '#f85149';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // 填充
+        ctx.lineTo(w, h);
+        ctx.lineTo(0, h);
+        ctx.closePath();
+        ctx.fillStyle = gradient;
+        ctx.fill();
+    }
+
+    // ========== 交易 ==========
+    function openTrade(mode) {
+        tradeMode = mode;
+        tradeCoin = 'btc';
+        document.getElementById('tradeIcon').textContent = mode === 'buy' ? '🟢' : '🔴';
+        document.getElementById('tradeTitle').textContent = (mode === 'buy' ? '买入' : '卖出') + ' ' + tradeCoin.toUpperCase();
+        document.getElementById('tradeAmount').value = '';
+        document.getElementById('tradePreview').textContent = '';
+        document.getElementById('tradeConfirmBtn').textContent = '确认' + (mode === 'buy' ? '买入' : '卖出');
+        document.getElementById('tradeModal').classList.remove('hidden');
+        selectTradeCoin('btc');
+    }
+
+    function selectTradeCoin(coin) {
+        tradeCoin = coin;
+        ['btc','eth','sol','moon','safe','rug','xau','xag'].forEach(c => {
+            const btnId = 'trade' + c.charAt(0).toUpperCase() + c.slice(1) + 'Btn';
+            const btn = document.getElementById(btnId);
+            if (btn) {
+                btn.style.borderColor = c === coin ? 'var(--blue)' : 'var(--border)';
+            }
+        });
+        
+        // 更新杠杆按钮
+        const currentLev = G.leverage[coin] || 1;
+        const maxLeverage = { btc: 10, eth: 5, sol: 5, moon: 3, safe: 3, rug: 3, xau: 1, xag: 1 };
+        const max = maxLeverage[coin] || 1;
+        document.querySelectorAll('.leverage-btn').forEach(btn => {
+            const btnLev = parseInt(btn.textContent);
+            btn.disabled = btnLev > max;
+            btn.style.borderColor = btnLev === currentLev ? 'var(--blue)' : 'var(--border)';
+            btn.style.opacity = btnLev > max ? '0.3' : '1';
+        });
+        
+        document.getElementById('tradeTitle').textContent = (tradeMode === 'buy' ? '买入' : '卖出') + ' ' + coin.toUpperCase();
+        updateTradePreview();
+    }
+
+    function setTradePercent(pct) {
+        if (tradeMode === 'buy') {
+            document.getElementById('tradeAmount').value = (G.usdt * pct / 100).toFixed(2);
+        } else {
+            document.getElementById('tradeAmount').value = (G.holdings[tradeCoin] * G.prices[tradeCoin] * pct / 100).toFixed(2);
+        }
+        updateTradePreview();
+    }
+
+    function updateTradePreview() {
+        const amount = parseFloat(document.getElementById('tradeAmount').value) || 0;
+        const leverage = G.leverage[tradeCoin] || 1;
+        const feeRate = tradeMode === 'buy' ? 0.0015 : 0.001;
+        const fee = amount * feeRate;
+        const coinAmount = (amount - fee) / G.prices[tradeCoin];
+        const label = tradeMode === 'buy' ? '预计买入' : '预计卖出';
+        document.getElementById('tradePreview').textContent = `${label} ${coinAmount.toFixed(6)} ${tradeCoin.toUpperCase()} (${leverage}x杠杆)`;
+        const feePreview = document.getElementById('feePreview');
+        if (feePreview) feePreview.textContent = `手续费: $${fee.toFixed(2)}`;
+    }
+
+    function closeTrade(e) {
+        if (e && e.target !== document.getElementById('tradeModal')) return;
+        document.getElementById('tradeModal').classList.add('hidden');
+    }
+
+    function confirmTrade() {
+        const amount = parseFloat(document.getElementById('tradeAmount').value) || 0;
+        if (amount <= 0) return;
+
+        const leverage = G.leverage[tradeCoin] || 1;
+        const feeRate = tradeMode === 'buy' ? 0.0015 : 0.001;
+        const fee = amount * feeRate;
+        const amountAfterFee = amount - fee;
+
+        if (tradeMode === 'buy') {
+            const marginRequired = amount / leverage;
+            if (marginRequired > G.usdt) {
+                showNotification('保证金不足！');
+                return;
+            }
+            const coinAmount = amountAfterFee / G.prices[tradeCoin];
+            G.usdt -= marginRequired;
+            G.margin[tradeCoin] += marginRequired;
+            G.holdings[tradeCoin] += coinAmount;
+            G.totalFees += fee;
+            
+            // 设置止盈止损
+            const tp = document.getElementById('takeProfitSelect').value;
+            const sl = document.getElementById('stopLossSelect').value;
+            G.takeProfit[tradeCoin] = parseInt(tp);
+            G.stopLoss[tradeCoin] = parseInt(sl);
+            
+            G.trades.push({ 
+                day: G.day, type: 'buy', coin: tradeCoin, amount: coinAmount, 
+                price: G.prices[tradeCoin], usd: amount, leverage: leverage, fee: fee, margin: marginRequired
+            });
+            showNotification(`买入 ${coinAmount.toFixed(6)} ${tradeCoin.toUpperCase()} (${leverage}x杠杆)，手续费 $${fee.toFixed(2)}`);
+        } else {
+            const maxSell = G.holdings[tradeCoin] * G.prices[tradeCoin];
+            if (amount > maxSell) {
+                showNotification('持仓不足！');
+                return;
+            }
+            const coinAmount = amountAfterFee / G.prices[tradeCoin];
+            const pnl = (G.prices[tradeCoin] - (G.trades.filter(t => t.coin === tradeCoin && t.type === 'buy').pop()?.price || G.prices[tradeCoin])) * coinAmount;
+            G.usdt += amountAfterFee + (G.margin[tradeCoin] || 0);
+            G.margin[tradeCoin] = 0;
+            G.holdings[tradeCoin] -= coinAmount;
+            G.totalFees += fee;
+            if (pnl > 0) G.wins++; else G.losses++;
+            G.trades.push({ 
+                day: G.day, type: 'sell', coin: tradeCoin, amount: coinAmount, 
+                price: G.prices[tradeCoin], usd: amount, leverage: leverage, fee: fee, pnl: pnl
+            });
+            showNotification(`卖出 ${coinAmount.toFixed(6)} ${tradeCoin.toUpperCase()}，手续费 $${fee.toFixed(2)}，盈亏 $${pnl.toFixed(2)}`);
+        }
+
+        document.getElementById('tradeModal').classList.add('hidden');
+        autoSave();
+        updateHistory();
+        updateUI();
+    }
+
+    function updateHistory() {
+        const list = document.getElementById('historyList');
+        const recent = G.trades.slice(-5).reverse();
+        if (recent.length === 0) return;
+
+        list.innerHTML = recent.map(t => `
+            <div class="history-item">
+                <span>第${t.day}天 ${t.type === 'buy' ? '🟢买入' : '🔴卖出'} ${t.coin.toUpperCase()}</span>
+                <span class="${t.type === 'buy' ? 'pnl-negative' : 'pnl-positive'}">$${formatNum(t.usd)}</span>
+            </div>
+        `).join('');
+    }
+
+    // ========== 杠杆设置 ===========
+    function setLeverage(lev) {
+        const maxLeverage = { btc: 10, eth: 5, sol: 5, moon: 3, safe: 3, rug: 3, xau: 1, xag: 1 };
+        const max = maxLeverage[tradeCoin] || 1;
+        const actualLev = Math.min(lev, max);
+        G.leverage[tradeCoin] = actualLev;
+        document.querySelectorAll('.leverage-btn').forEach(btn => {
+            const btnLev = parseInt(btn.textContent);
+            btn.style.borderColor = btnLev === actualLev ? 'var(--blue)' : 'var(--border)';
+        });
+        updateTradePreview();
+    }
+
+    // ========== 每日新闻系统 ===========
+    const NEWS_TEMPLATES = {
+        noise: [
+            { title: '马斯克发推："BTC🚀"', desc: '马斯克又发了一条关于比特币的推文，散户们疯狂解读。', impact: 0.02, fake: false },
+            { title: '论坛大佬喊单：目标10万！', desc: '某论坛KOL发帖称BTC年底必到10万，评论区两极分化。', impact: 0.01, fake: true },
+            { title: '分析师预测：短期回调', desc: '某分析师称市场过热，建议减仓。但也有人说他上次预测完全错误。', impact: -0.01, fake: true },
+            { title: '散户恐慌：要不要割肉？', desc: 'Reddit上散户们在讨论是否应该止损，情绪悲观。', impact: -0.015, fake: false },
+            { title: 'FOMO情绪蔓延', desc: '看到别人赚钱，新韭菜疯狂开户入场。', impact: 0.02, fake: false },
+            { title: '某明星发币：$STAR暴涨50倍', desc: '某网红发了自己的代币，一天涨了50倍。但这能持续吗？', impact: 0.05, fake: true },
+        ],
+        medium: [
+            { title: '币安上线新币', desc: '币安宣布上线一个新的DeFi代币，市场反应积极。', impact: 0.03, fake: false },
+            { title: '巨鲸钱包异动', desc: '链上数据显示，某巨鲸转移了1万枚BTC到交易所。', impact: -0.02, fake: false },
+            { title: '矿工持仓创新高', desc: '矿工们在囤币，不愿在当前价格卖出。', impact: 0.02, fake: false },
+        ],
+        heavy: [
+            { title: 'SEC宣布调查某交易所', desc: '美国SEC对某大型交易所展开调查，市场恐慌性下跌。', impact: -0.08, fake: false },
+            { title: '某交易所被黑！损失5亿美元', desc: '某交易所遭受黑客攻击，用户资金安全成疑。', impact: -0.12, fake: false },
+            { title: '美联储宣布降息', desc: '美联储意外宣布降息25个基点，风险资产全线暴涨。', impact: 0.06, fake: false },
+        ],
+        macro: [
+            { title: '美联储议息会议纪要', desc: '美联储公布会议纪要，暗示未来可能加息。', impact: -0.03, fake: false },
+            { title: '日本央行干预汇市', desc: '日本央行突然干预外汇市场，日元大幅波动。', impact: -0.02, fake: false },
+            { title: '中美贸易战升级', desc: '美国宣布对中国加征新关税，市场恐慌。', impact: -0.06, fake: false },
+            { title: '比特币ETF资金流入', desc: '比特币现货ETF连续多日净流入，机构资金持续进场。', impact: 0.04, fake: false },
+            { title: '黄金突破历史新高', desc: '黄金价格突破历史新高，避险情绪升温。', impact: 0.01, fake: false },
+        ]
+    };
+
+    function generateDailyNews() {
+        G.news = [];
+        const newsCount = Math.floor(Math.random() * 3) + 1;
+        for (let i = 0; i < newsCount; i++) {
+            const roll = Math.random();
+            let category;
+            if (roll < 0.60) category = 'noise';
+            else if (roll < 0.80) category = 'medium';
+            else if (roll < 0.90) category = 'heavy';
+            else category = 'macro';
+            
+            const templates = NEWS_TEMPLATES[category];
+            const template = templates[Math.floor(Math.random() * templates.length)];
+            const isFake = category === 'noise' && Math.random() < 0.3;
+            
+            const news = { ...template, category: category, fake: isFake, time: `第${G.day}天` };
+            G.news.push(news);
+            
+            // 应用价格影响
+            ['btc', 'eth', 'sol'].forEach(coin => {
+                G.prices[coin] *= (1 + news.impact * (0.5 + Math.random()));
+            });
+        }
+    }
+
+    // ========== 庄家AI系统 ===========
+    function updateMarketMaker() {
+        if (G.marketMaker.cooldown > 0) {
+            G.marketMaker.cooldown--;
+            return;
+        }
+        const roll = Math.random();
+        const playerHoldings = Object.entries(G.holdings)
+            .filter(([k, v]) => ['moon', 'safe', 'rug'].includes(k) && v > 0);
+        
+        if (roll < 0.3 && playerHoldings.length > 0) {
+            const target = playerHoldings[Math.floor(Math.random() * playerHoldings.length)][0];
+            G.marketMaker.target = target;
+            G.marketMaker.mood = Math.random() < 0.5 ? 'bearish' : 'bullish';
+            G.marketMaker.cooldown = Math.floor(Math.random() * 5) + 3;
+        } else if (roll < 0.5) {
+            const targets = ['moon', 'safe', 'rug'];
+            G.marketMaker.target = targets[Math.floor(Math.random() * targets.length)];
+            G.marketMaker.mood = 'bullish';
+            G.marketMaker.cooldown = Math.floor(Math.random() * 3) + 1;
+        } else if (roll < 0.7) {
+            const targets = ['moon', 'safe', 'rug'];
+            G.marketMaker.target = targets[Math.floor(Math.random() * targets.length)];
+            G.marketMaker.mood = 'bearish';
+            G.marketMaker.cooldown = Math.floor(Math.random() * 3) + 1;
+        } else {
+            G.marketMaker.mood = 'neutral';
+            G.marketMaker.target = null;
+        }
+    }
+
+    // ========== NPC散户系统 ===========
+    function initNPCs() {
+        const names = ['小明', '韭菜张', '老王', '币圈小李', '梭哈哥', '胆小鬼', '信仰者', '技术派', '跟风妹', '大佬刘', '小白兔', '合约王', '囤币党', '短线客', '价值投资者'];
+        const personalities = ['追涨杀跌', '恐慌', 'FOMO', '冷静', '钻石手'];
+        G.npcs = names.map((name, i) => ({
+            name: name,
+            personality: personalities[i % personalities.length],
+            usdt: 5000 + Math.random() * 20000,
+            holdings: { btc: 0, eth: 0, sol: 0, moon: 0, safe: 0, rug: 0 },
+            lastTrade: null,
+            lastTradeType: null,
+            pnl: 0
+        }));
+    }
+
+    function updateNPCs() {
+        G.npcs.forEach(npc => {
+            const roll = Math.random();
+            switch(npc.personality) {
+                case '追涨杀跌':
+                    if (roll < 0.3) {
+                        const bestCoin = Object.entries(G.prices)
+                            .filter(([k]) => ['btc', 'eth', 'sol'].includes(k))
+                            .sort((a, b) => b[1] - a[1])[0][0];
+                        const amount = npc.usdt * 0.2;
+                        if (amount > 100) {
+                            npc.usdt -= amount;
+                            npc.holdings[bestCoin] += amount / G.prices[bestCoin];
+                            npc.lastTrade = bestCoin;
+                            npc.lastTradeType = 'buy';
+                        }
+                    }
+                    break;
+                case '恐慌':
+                    if (roll < 0.2) {
+                        Object.entries(npc.holdings).forEach(([coin, amount]) => {
+                            if (amount > 0) {
+                                npc.usdt += amount * G.prices[coin];
+                                npc.holdings[coin] = 0;
+                                npc.lastTrade = coin;
+                                npc.lastTradeType = 'sell';
+                            }
+                        });
+                    }
+                    break;
+                case 'FOMO':
+                    if (roll < 0.25) {
+                        const coins = ['btc', 'eth', 'sol', 'moon'];
+                        const coin = coins[Math.floor(Math.random() * coins.length)];
+                        const amount = npc.usdt * 0.3;
+                        if (amount > 100) {
+                            npc.usdt -= amount;
+                            npc.holdings[coin] += amount / G.prices[coin];
+                            npc.lastTrade = coin;
+                            npc.lastTradeType = 'buy';
+                        }
+                    }
+                    break;
+                case '冷静':
+                    if (roll < 0.1) {
+                        Object.entries(npc.holdings).forEach(([coin, amount]) => {
+                            if (amount > 0 && G.prices[coin] > (G.priceHistory[coin]?.[G.priceHistory[coin].length - 5] || G.prices[coin]) * 1.1) {
+                                npc.usdt += amount * G.prices[coin] * 0.5;
+                                npc.holdings[coin] *= 0.5;
+                                npc.lastTrade = coin;
+                                npc.lastTradeType = 'sell';
+                            }
+                        });
+                    }
+                    break;
+                case '钻石手':
+                    if (roll < 0.05) {
+                        const coin = 'btc';
+                        const amount = npc.usdt * 0.1;
+                        if (amount > 100) {
+                            npc.usdt -= amount;
+                            npc.holdings[coin] += amount / G.prices[coin];
+                            npc.lastTrade = coin;
+                            npc.lastTradeType = 'buy';
+                        }
+                    }
+                    break;
+            }
+        });
+    }
+
+    // ========== 止盈止损系统 ===========
+    function checkStopLossTakeProfit() {
+        ['btc', 'eth', 'sol', 'moon', 'safe', 'rug'].forEach(coin => {
+            if (G.holdings[coin] <= 0) return;
+            const currentPrice = G.prices[coin];
+            const buyPrice = G.trades.filter(t => t.coin === coin && t.type === 'buy').pop()?.price;
+            if (!buyPrice) return;
+            const pnlPercent = (currentPrice - buyPrice) / buyPrice * 100;
+            
+            if (G.takeProfit[coin] > 0 && pnlPercent >= G.takeProfit[coin]) {
+                const amount = G.holdings[coin] * currentPrice;
+                G.usdt += amount * 0.999;
+                G.holdings[coin] = 0;
+                G.margin[coin] = 0;
+                G.wins++;
+                showNotification(`🎯 ${coin.toUpperCase()} 触发止盈！盈利 ${pnlPercent.toFixed(1)}%`);
+            }
+            
+            if (G.stopLoss[coin] > 0 && pnlPercent <= -G.stopLoss[coin]) {
+                const amount = G.holdings[coin] * currentPrice;
+                G.usdt += amount * 0.999;
+                G.holdings[coin] = 0;
+                G.margin[coin] = 0;
+                G.losses++;
+                showNotification(`🛡️ ${coin.toUpperCase()} 触发止损！亏损 ${Math.abs(pnlPercent).toFixed(1)}%`);
+            }
+        });
+    }
+
+    // ========== 爆仓检查 ===========
+    function checkLiquidation() {
+        ['btc', 'eth', 'sol', 'moon', 'safe', 'rug'].forEach(coin => {
+            if (G.margin[coin] <= 0) return;
+            const currentPrice = G.prices[coin];
+            const buyPrice = G.trades.filter(t => t.coin === coin && t.type === 'buy').pop()?.price;
+            if (!buyPrice) return;
+            const pnlPercent = (currentPrice - buyPrice) / buyPrice;
+            const leverage = G.leverage[coin] || 1;
+            
+            if (pnlPercent * leverage < -0.8) {
+                G.holdings[coin] = 0;
+                G.margin[coin] = 0;
+                G.losses++;
+                showNotification(`💥 ${coin.toUpperCase()} 爆仓！保证金全部损失`);
+            }
+        });
+        
+        // 检查总资产归零
+        if (calcTotalAsset() <= 0) {
+            G.usdt = 0;
+            G.holdings = { btc: 0, eth: 0, sol: 0, moon: 0, safe: 0, rug: 0, xau: 0, xag: 0 };
+            G.margin = { btc: 0, eth: 0, sol: 0, moon: 0, safe: 0, rug: 0 };
+            autoSave();
+            setTimeout(() => {
+                showNotification('💀 资产归零，游戏结束！');
+                showGameOver();
+            }, 500);
+        }
+    }
+
+    // ========== 结束今天 ==========
+    function endDay() {
+        const startPrices = { ...G.prices };
+
+        // 模拟价格变化（使用真实波动率）
+        G.prices.btc = simulatePrice(G.prices.btc, G.day, 'btc');
+        G.prices.eth = simulatePrice(G.prices.eth, G.day, 'eth');
+        G.prices.sol = simulatePrice(G.prices.sol, G.day, 'sol');
+        G.prices.moon = simulatePrice(G.prices.moon, G.day, 'moon');
+        G.prices.safe = simulatePrice(G.prices.safe, G.day, 'safe');
+        G.prices.rug = simulatePrice(G.prices.rug, G.day, 'rug');
+        G.prices.xau = simulatePrice(G.prices.xau, G.day, 'xau');
+        G.prices.xag = simulatePrice(G.prices.xag, G.day, 'xag');
+
+        // 记录价格历史
+        G.priceHistory.btc.push(G.prices.btc);
+        G.priceHistory.eth.push(G.prices.eth);
+        G.priceHistory.sol.push(G.prices.sol);
+        G.priceHistory.moon.push(G.prices.moon);
+        G.priceHistory.safe.push(G.prices.safe);
+        G.priceHistory.rug.push(G.prices.rug);
+        G.priceHistory.xau.push(G.prices.xau);
+        G.priceHistory.xag.push(G.prices.xag);
+
+        if (G.priceHistory.btc.length > 30) {
+            G.priceHistory.btc.shift();
+            G.priceHistory.eth.shift();
+            G.priceHistory.sol.shift();
+            G.priceHistory.moon.shift();
+            G.priceHistory.safe.shift();
+            G.priceHistory.rug.shift();
+            G.priceHistory.xau.shift();
+            G.priceHistory.xag.shift();
+        }
+
+        // 触发每日新闻
+        generateDailyNews();
+        
+        // 庄家AI行为
+        updateMarketMaker();
+        
+        // NPC交易行为
+        updateNPCs();
+        
+        // 检查止盈止损
+        checkStopLossTakeProfit();
+        
+        // 检查爆仓
+        checkLiquidation();
+
+        const endAsset = calcTotalAsset();
+        const dayReturn = ((endAsset / G.initFund) - 1) * 100;
+        G.dayReturns.push(dayReturn);
+
+        const hadEvent = Math.random() < getDiff().eventChance;
+        showSummary(startPrices, endAsset, dayReturn, hadEvent);
+
+        G.day++;
+
+        if (G.day > G.totalDays) {
+            autoSave();
+            setTimeout(showGameOver, 1500);
+        } else {
+            autoSave();
+        }
+    }
+
+    function showSummary(startPrices, endAsset, dayReturn, hadEvent) {
+        const btcChange = ((G.prices.btc / startPrices.btc) - 1) * 100;
+        const ethChange = ((G.prices.eth / startPrices.eth) - 1) * 100;
+        const solChange = ((G.prices.sol / startPrices.sol) - 1) * 100;
+
+        let html = `
+            <div style="margin-bottom:12px;">
+                <div style="font-weight:600; margin-bottom:8px;">📈 今日行情</div>
+                <div style="display:flex; justify-content:space-between; padding:4px 0;">
+                    <span>BTC</span>
+                    <span class="${btcChange >= 0 ? 'pnl-positive' : 'pnl-negative'}">${btcChange >= 0 ? '+' : ''}${btcChange.toFixed(2)}%</span>
+                </div>
+                <div style="display:flex; justify-content:space-between; padding:4px 0;">
+                    <span>ETH</span>
+                    <span class="${ethChange >= 0 ? 'pnl-positive' : 'pnl-negative'}">${ethChange >= 0 ? '+' : ''}${ethChange.toFixed(2)}%</span>
+                </div>
+                <div style="display:flex; justify-content:space-between; padding:4px 0;">
+                    <span>SOL</span>
+                    <span class="${solChange >= 0 ? 'pnl-positive' : 'pnl-negative'}">${solChange >= 0 ? '+' : ''}${solChange.toFixed(2)}%</span>
+                </div>
+            </div>
+            <div style="border-top:1px solid var(--border); padding-top:12px;">
+                <div style="font-weight:600; margin-bottom:8px;">💰 我的资产</div>
+                <div style="display:flex; justify-content:space-between; padding:4px 0;">
+                    <span>总资产</span>
+                    <span>$${formatNum(endAsset)}</span>
+                </div>
+                <div style="display:flex; justify-content:space-between; padding:4px 0;">
+                    <span>累计收益</span>
+                    <span class="${dayReturn >= 0 ? 'pnl-positive' : 'pnl-negative'}">${dayReturn >= 0 ? '+' : ''}${dayReturn.toFixed(2)}%</span>
+                </div>
+            </div>
+        `;
+
+        if (hadEvent) {
+            html += `<div style="margin-top:12px; padding:8px; background:var(--bg); border-radius:8px; font-size:13px; color:var(--yellow);">⚡ 今日有随机事件发生！</div>`;
+        }
+
+        document.getElementById('summaryContent').innerHTML = html;
+        document.getElementById('summaryModal').classList.remove('hidden');
+    }
+
+    function closeSummary() {
+        document.getElementById('summaryModal').classList.add('hidden');
+
+        // 触发事件
+        setTimeout(() => {
+            triggerEvent();
+            updateUI();
+        }, 300);
+    }
+
+    // ========== 游戏结束 ==========
+    function showGameOver() {
+        const totalAsset = calcTotalAsset();
+        const pnl = totalAsset - G.initFund;
+        const pnlPct = ((totalAsset / G.initFund) - 1) * 100;
+        const winRate = G.trades.length > 0 ? (G.wins / G.trades.length * 100) : 0;
+
+        // 判断结局
+        let ending, endingIcon, endingDesc;
+        if (totalAsset >= G.initFund * 5) {
+            ending = '传奇大佬'; endingIcon = '👑';
+            endingDesc = '你是币圈传说！从1万到5万，你证明了纪律和耐心的力量。';
+        } else if (totalAsset >= G.initFund * 2) {
+            ending = '钻石手'; endingIcon = '💎';
+            endingDesc = '恭喜！你用稳健的策略翻倍了资产，跑赢了99%的人。';
+        } else if (totalAsset >= G.initFund * 1.3) {
+            ending = '稳健投资者'; endingIcon = '📊';
+            endingDesc = '你赚了30%以上，这已经超过了大部分基金经理的年化收益。';
+        } else if (totalAsset >= G.initFund) {
+            ending = '活着就好'; endingIcon = '😅';
+            endingDesc = '至少没亏钱！在币圈，活着就是胜利。';
+        } else if (totalAsset >= G.initFund * 0.5) {
+            ending = '被割韭菜'; endingIcon = '🥬';
+            endingDesc = '你学到了一个昂贵的教训。下次记得止损。';
+        } else if (totalAsset > 0) {
+            ending = '归零边缘'; endingIcon = '💀';
+            endingDesc = '几乎亏光了...但你还活着，还有机会。';
+        } else {
+            ending = '彻底归零'; endingIcon = '☠️';
+            endingDesc = '账户清零。这就是不尊重市场的代价。';
+        }
+
+        let html = `
+            <div class="game-over">
+                <div class="game-over-icon">${endingIcon}</div>
+                <div class="game-over-title">${ending}</div>
+                <div class="game-over-desc">${endingDesc}</div>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-label">初始资金</div>
+                        <div class="stat-value">$${formatNum(G.initFund)}</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">最终资产</div>
+                        <div class="stat-value ${pnl >= 0 ? 'pnl-positive' : 'pnl-negative'}">$${formatNum(totalAsset)}</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">总收益率</div>
+                        <div class="stat-value ${pnl >= 0 ? 'pnl-positive' : 'pnl-negative'}">${pnl >= 0 ? '+' : ''}${pnlPct.toFixed(2)}%</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">最大回撤</div>
+                        <div class="stat-value pnl-negative">${(G.maxDrawdown * 100).toFixed(1)}%</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">交易次数</div>
+                        <div class="stat-value">${G.trades.length}</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">游戏天数</div>
+                        <div class="stat-value">${G.totalDays}天</div>
+                    </div>
+                </div>
+                <button class="btn btn-buy btn-full" onclick="location.reload()">再来一局 🔄</button>
+            </div>
+        `;
+
+        document.getElementById('gamePage').classList.add('hidden');
+        document.getElementById('endPage').innerHTML = html;
+        document.getElementById('endPage').classList.remove('hidden');
+    }
+
+    // ========== 工具函数 ==========
+    function calcTotalAsset() {
+        return G.usdt +
+            G.holdings.btc * G.prices.btc +
+            G.holdings.eth * G.prices.eth +
+            G.holdings.sol * G.prices.sol +
+            G.holdings.moon * G.prices.moon +
+            G.holdings.safe * G.prices.safe +
+            G.holdings.rug * G.prices.rug +
+            G.holdings.xau * G.prices.xau +
+            G.holdings.xag * G.prices.xag;
+    }
+
+    function formatNum(n) {
+        if (n >= 1000000) return (n / 1000000).toFixed(2) + 'M';
+        if (n >= 1000) return n.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+        return n.toFixed(2);
+    }
+
+    function getGameDate() {
+        const start = new Date('2026-01-01');
+        start.setDate(start.getDate() + G.day);
+        return start.toISOString().split('T')[0];
+    }
+
+    let notifTimeout;
+    function showNotification(msg) {
+        // 简单通知
+        let el = document.getElementById('notif');
+        if (!el) {
+            el = document.createElement('div');
+            el.id = 'notif';
+            el.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 20px;z-index:200;font-size:14px;max-width:80%;text-align:center;box-shadow:0 4px 20px rgba(0,0,0,0.5);';
+            document.body.appendChild(el);
+        }
+        el.textContent = msg;
+        el.style.display = 'block';
+        clearTimeout(notifTimeout);
+        notifTimeout = setTimeout(() => el.style.display = 'none', 3000);
+    }
+
+    // ========== 存档系统 ==========
+    const SAVE_KEY = 'crypto_adventure_saves';
+    let currentSaveSlot = null;
+
+    function getSaves() {
+        try {
+            return JSON.parse(localStorage.getItem(SAVE_KEY)) || {};
+        } catch(e) {
+            return {};
+        }
+    }
+
+    function saveGame(slot) {
+        if (isOfflineMode) {
+            // 离线模式：存到localStorage
+            const saves = getSaves();
+            saves[slot] = {
+                ...G,
+                savedAt: new Date().toISOString(),
+                totalAsset: calcTotalAsset()
+            };
+            localStorage.setItem(SAVE_KEY, JSON.stringify(saves));
+        } else {
+            // 在线模式：存到服务器
+            apiCall('/save', {
+                token: authToken,
+                slot_name: slot,
+                game_data: { ...G, totalAsset: calcTotalAsset() }
+            });
+        }
+        currentSaveSlot = slot;
+    }
+
+    function autoSave() {
+        if (currentSaveSlot) {
+            saveGame(currentSaveSlot);
+        }
+    }
+
+    function loadGame(slot) {
+        if (isOfflineMode) {
+            const saves = getSaves();
+            if (saves[slot]) {
+                G = { ...saves[slot] };
+                delete G.savedAt;
+                delete G.totalAsset;
+                currentSaveSlot = slot;
+                document.getElementById('startPage').classList.add('hidden');
+                document.getElementById('gamePage').classList.remove('hidden');
+                document.getElementById('tabBar').classList.remove('hidden');
+                updateUI();
+                showNotification('存档已加载！');
+            }
+        } else {
+            loadServerSave(slot);
+        }
+    }
+
+    function deleteSave(slot) {
+        if (isOfflineMode) {
+            const saves = getSaves();
+            delete saves[slot];
+            localStorage.setItem(SAVE_KEY, JSON.stringify(saves));
+            renderSaveList();
+        } else {
+            deleteServerSave(slot);
+        }
+    }
+
+    function renderSaveList() {
+        if (!isOfflineMode) return;
+        const saves = getSaves();
+        const container = document.getElementById('saveList');
+        const saveListCard = document.getElementById('saveListCard');
+        const slots = Object.keys(saves);
+
+        if (slots.length === 0) {
+            if (saveListCard) saveListCard.style.display = 'none';
+            return;
+        }
+
+        if (saveListCard) saveListCard.style.display = 'block';
+        
+        container.innerHTML = slots.map(slot => {
+            const s = saves[slot];
+            const date = new Date(s.savedAt).toLocaleString('zh-CN');
+            const pnl = ((s.totalAsset / s.initFund) - 1) * 100;
+            return `
+                <div class="history-item" style="cursor:pointer;" onclick="loadGame('${slot}')">
+                    <div>
+                        <div style="font-weight:600;">${s.player} · 第${s.day}天</div>
+                        <div style="font-size:11px; color:var(--text2);">${date}</div>
+                    </div>
+                    <div style="text-align:right;">
+                        <div class="${pnl >= 0 ? 'pnl-positive' : 'pnl-negative'}">$${formatNum(s.totalAsset)}</div>
+                        <div style="font-size:11px; color:var(--text2);">${pnl >= 0 ? '+' : ''}${pnl.toFixed(1)}%</div>
+                    </div>
+                    <button onclick="event.stopPropagation(); deleteSave('${slot}')" style="background:var(--red); border:none; color:white; padding:4px 8px; border-radius:4px; font-size:11px; margin-left:8px;">删除</button>
+                </div>
+            `;
+        }).join('');
+    }
+
+    function startNewGame() {
+        const slot = 'save_' + Date.now();
+        const playerName = isOfflineMode ? (document.getElementById('playerName').value || '匿名玩家') : authUsername;
+        
+        // 检查存档名是否重复
+        const saves = getSaves();
+        const existingNames = Object.values(saves).map(s => s.player);
+        if (existingNames.includes(playerName)) {
+            showNotification('存档名已存在，请修改昵称');
+            return;
+        }
+        
+        G.player = playerName;
+        G.initFund = parseInt(document.getElementById('initFund').value);
+        G.usdt = G.initFund;
+        G.totalDays = parseInt(document.getElementById('gameDays').value);
+        G.difficulty = document.getElementById('difficulty').value;
+        G.priceHistory.btc = [G.prices.btc];
+        G.priceHistory.eth = [G.prices.eth];
+        G.priceHistory.sol = [G.prices.sol];
+        G.priceHistory.moon = [G.prices.moon];
+        G.priceHistory.safe = [G.prices.safe];
+        G.priceHistory.rug = [G.prices.rug];
+        G.priceHistory.xau = [G.prices.xau];
+        G.priceHistory.xag = [G.prices.xag];
+        
+        // 初始化NPC
+        initNPCs();
+        
+        currentSaveSlot = slot;
+        saveGame(slot);
+        document.getElementById('startPage').classList.add('hidden');
+        document.getElementById('gamePage').classList.remove('hidden');
+        updateUI();
+    }
+
+    // 启动时渲染存档列表
+    renderSaveList();
+    renderBestRecord();
+
+    // ========== 成就系统 ==========
+    const ACHIEVEMENTS = [
+        { id: 'first_trade', icon: '🤝', name: '第一笔交易', desc: '完成第一次买卖', check: () => G.trades.length >= 1 },
+        { id: 'diamond_hands', icon: '💎', name: '钻石手', desc: '连续持有30天不卖', check: () => G.day >= 30 && G.trades.filter(t => t.type === 'sell').length === 0 },
+        { id: 'profit_10', icon: '📈', name: '小赚一笔', desc: '收益率超过10%', check: () => calcTotalAsset() >= G.initFund * 1.1 },
+        { id: 'profit_50', icon: '🚀', name: '翻半倍', desc: '收益率超过50%', check: () => calcTotalAsset() >= G.initFund * 1.5 },
+        { id: 'profit_100', icon: '👑', name: '翻倍了！', desc: '收益率超过100%', check: () => calcTotalAsset() >= G.initFund * 2 },
+        { id: 'profit_500', icon: '🏆', name: '传奇大佬', desc: '收益率超过500%', check: () => calcTotalAsset() >= G.initFund * 5 },
+        { id: 'trade_10', icon: '📊', name: '活跃交易者', desc: '交易超过10次', check: () => G.trades.length >= 10 },
+        { id: 'trade_50', icon: '🎰', name: '交易狂人', desc: '交易超过50次', check: () => G.trades.length >= 50 },
+        { id: 'survive_30', icon: '📅', name: '活过一个月', desc: '游戏天数达到30天', check: () => G.day >= 30 },
+        { id: 'survive_90', icon: '🗓️', name: '季度玩家', desc: '游戏天数达到90天', check: () => G.day >= 90 },
+        { id: 'survive_365', icon: '🎄', name: '年度玩家', desc: '游戏天数达到365天', check: () => G.day >= 365 },
+        { id: 'all_coins', icon: '🪙', name: '多币玩家', desc: '同时持有BTC、ETH、SOL', check: () => G.holdings.btc > 0 && G.holdings.eth > 0 && G.holdings.sol > 0 },
+        { id: 'whale', icon: '🐋', name: '巨鲸', desc: '总资产超过100,000', check: () => calcTotalAsset() >= 100000 },
+        { id: 'broke', icon: '💀', name: '归零了', desc: '资产跌到初始资金的10%以下', check: () => calcTotalAsset() <= G.initFund * 0.1 },
+        { id: 'black_swan', icon: '⚡', name: '黑天鹅幸存者', desc: '经历一次黑天鹅事件', check: () => G.eventHistory.some(e => ['ftx','war','tether'].includes(e)) },
+        { id: 'meme_king', icon: '🐸', name: 'Meme之王', desc: '在Meme币上赚到钱', check: () => G.trades.some(t => t.coin === 'sol' && t.type === 'sell' && t.usd > 500) },
+        { id: 'hodler', icon: '🧘', name: 'HODL信仰者', desc: '连续60天不交易', check: () => G.day >= 60 && G.trades.filter(t => t.day > G.day - 60).length === 0 },
+        { id: 'catch_bottom', icon: '🎯', name: '抄底大师', desc: '在暴跌后买入并盈利', check: () => G.trades.some(t => t.type === 'buy' && calcTotalAsset() > G.initFund) }
+    ];
+
+    async function checkAchievements() {
+        const saved = JSON.parse(localStorage.getItem('crypto_adventure_achievements') || '[]');
+        let newAchieve = null;
+        ACHIEVEMENTS.forEach(a => {
+            if (!saved.includes(a.id) && a.check()) {
+                saved.push(a.id);
+                newAchieve = a;
+                
+                // 在线模式：同步到服务器
+                if (!isOfflineMode && authToken) {
+                    apiCall('/achievement', {
+                        token: authToken,
+                        achievement_id: a.id
+                    });
+                }
+            }
+        });
+        localStorage.setItem('crypto_adventure_achievements', JSON.stringify(saved));
+        if (newAchieve) showAchievementPopup(newAchieve);
+    }
+
+    function showAchievementPopup(a) {
+        const el = document.createElement('div');
+        el.className = 'achievement-popup';
+        el.innerHTML = `<div class="ap-icon">${a.icon}</div><div class="ap-title">成就解锁！</div><div class="ap-name">${a.name}</div>`;
+        document.body.appendChild(el);
+        setTimeout(() => el.remove(), 3000);
+    }
+
+    function renderAchievements() {
+        const saved = JSON.parse(localStorage.getItem('crypto_adventure_achievements') || '[]');
+        const grid = document.getElementById('achieveGrid');
+        grid.innerHTML = ACHIEVEMENTS.map(a => `
+            <div class="achievement-item ${saved.includes(a.id) ? 'unlocked' : ''}">
+                <div class="ach-icon">${a.icon}</div>
+                <div class="ach-name">${a.name}</div>
+                <div class="ach-desc">${a.desc}</div>
+            </div>
+        `).join('');
+    }
+
+    // ========== 排行榜 ==========
+    async function saveToLeaderboard() {
+        const totalAsset = calcTotalAsset();
+        const pnl = ((totalAsset / G.initFund) - 1) * 100;
+        const ending = getEnding();
+        
+        if (!isOfflineMode && authToken) {
+            // 在线模式：保存到服务器
+            await apiCall('/leaderboard', {
+                token: authToken,
+                total_asset: totalAsset,
+                pnl_percent: pnl,
+                days: G.day,
+                difficulty: G.difficulty,
+                ending: ending
+            });
+        }
+        
+        // 同时保存到本地
+        const record = {
+            player: G.player,
+            totalAsset: totalAsset,
+            pnl: pnl,
+            days: G.day,
+            trades: G.trades.length,
+            maxDrawdown: G.maxDrawdown,
+            difficulty: G.difficulty,
+            date: new Date().toISOString(),
+            ending: ending
+        };
+        const lb = JSON.parse(localStorage.getItem('crypto_adventure_leaderboard') || '[]');
+        lb.push(record);
+        lb.sort((a, b) => b.pnl - a.pnl);
+        localStorage.setItem('crypto_adventure_leaderboard', JSON.stringify(lb.slice(0, 20)));
+    }
+
+    function getEnding() {
+        const totalAsset = calcTotalAsset();
+        if (totalAsset >= G.initFund * 5) return '👑 传奇大佬';
+        if (totalAsset >= G.initFund * 2) return '💎 钻石手';
+        if (totalAsset >= G.initFund * 1.3) return '📊 稳健投资者';
+        if (totalAsset >= G.initFund) return '😅 活着就好';
+        if (totalAsset >= G.initFund * 0.5) return '🥬 被割韭菜';
+        if (totalAsset > 0) return '💀 归零边缘';
+        return '☠️ 彻底归零';
+    }
+
+    function renderLeaderboard() {
+        const lb = JSON.parse(localStorage.getItem('crypto_adventure_leaderboard') || '[]');
+        const container = document.getElementById('rankList');
+        if (lb.length === 0) {
+            container.innerHTML = '<div style="text-align:center; color:var(--text2); padding:20px;">暂无记录，完成一局游戏后自动记录</div>';
+            return;
+        }
+        container.innerHTML = lb.map((r, i) => `
+            <div class="leaderboard-item">
+                <div class="lb-rank">${i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : '#' + (i+1)}</div>
+                <div class="lb-info">
+                    <div class="lb-name">${r.player} · ${r.ending}</div>
+                    <div class="lb-detail">第${r.days}天 · ${r.trades}次交易 · ${r.difficulty}</div>
+                    <div class="lb-detail">${new Date(r.date).toLocaleDateString('zh-CN')}</div>
+                </div>
+                <div class="lb-pnl ${r.pnl >= 0 ? 'pnl-positive' : 'pnl-negative'}">${r.pnl >= 0 ? '+' : ''}${r.pnl.toFixed(1)}%</div>
+            </div>
+        `).join('');
+    }
+
+    async function renderBestRecord() {
+        const el = document.getElementById('bestRecord');
+        
+        if (!isOfflineMode && authToken) {
+            // 在线模式：从服务器获取排行榜
+            const result = await apiCall('/leaderboard');
+            if (result.leaderboard && result.leaderboard.length > 0) {
+                const best = result.leaderboard[0];
+                el.innerHTML = `
+                    <div style="font-size:20px; font-weight:700; color:${best.pnl_percent >= 0 ? 'var(--green)' : 'var(--red)'}">
+                        ${best.pnl_percent >= 0 ? '+' : ''}${best.pnl_percent.toFixed(1)}%
+                    </div>
+                    <div style="margin-top:4px;">${best.username} · ${best.ending || ''}</div>
+                    <div style="font-size:11px; margin-top:2px;">第${best.days}天 · ${new Date(best.date).toLocaleDateString('zh-CN')}</div>
+                `;
+                return;
+            }
+        }
+        
+        // 离线模式：从本地获取
+        const lb = JSON.parse(localStorage.getItem('crypto_adventure_leaderboard') || '[]');
+        if (lb.length === 0) return;
+        const best = lb[0];
+        el.innerHTML = `
+            <div style="font-size:20px; font-weight:700; color:${best.pnl >= 0 ? 'var(--green)' : 'var(--red)'}">
+                ${best.pnl >= 0 ? '+' : ''}${best.pnl.toFixed(1)}%
+            </div>
+            <div style="margin-top:4px;">${best.player} · ${best.ending}</div>
+            <div style="font-size:11px; margin-top:2px;">第${best.days}天 · ${new Date(best.date).toLocaleDateString('zh-CN')}</div>
+        `;
+    }
+
+    // ========== 每日任务 ==========
+    const DAILY_TASKS = [
+        { id: 'trade_once', name: '完成一笔交易', desc: '今天买入或卖出任意币种', reward: 500, check: (dayTrades) => dayTrades.length >= 1 },
+        { id: 'trade_three', name: '交易达人', desc: '今天完成3笔交易', reward: 1000, check: (dayTrades) => dayTrades.length >= 3 },
+        { id: 'hold_all', name: '持仓不动', desc: '今天不卖出任何币种', reward: 300, check: (dayTrades) => !dayTrades.some(t => t.type === 'sell') },
+        { id: 'check_chart', name: '查看行情', desc: '切换查看不同币种行情', reward: 200, check: () => true },
+        { id: 'profit_day', name: '日收益为正', desc: '今天的收益为正', reward: 800, check: (dayTrades, dayReturn) => dayReturn > 0 }
+    ];
+
+    function getTodayTasks() {
+        const saved = JSON.parse(localStorage.getItem('crypto_adventure_tasks') || '{}');
+        const today = new Date().toISOString().split('T')[0];
+        if (saved.date !== today) {
+            // 新的一天，重置任务
+            const tasks = DAILY_TASKS.map(t => ({ ...t, completed: false }));
+            localStorage.setItem('crypto_adventure_tasks', JSON.stringify({ date: today, tasks }));
+            return tasks;
+        }
+        return saved.tasks;
+    }
+
+    function checkDailyTasks() {
+        const tasks = getTodayTasks();
+        const dayTrades = G.trades.filter(t => t.day === G.day);
+        const dayReturn = G.dayReturns[G.dayReturns.length - 1] || 0;
+        let reward = 0;
+        tasks.forEach(t => {
+            if (!t.completed && t.check(dayTrades, dayReturn)) {
+                t.completed = true;
+                reward += t.reward;
+                showNotification(`✅ 任务完成：${t.name} +$${t.reward}`);
+            }
+        });
+        localStorage.setItem('crypto_adventure_tasks', JSON.stringify({ date: new Date().toISOString().split('T')[0], tasks }));
+        if (reward > 0) G.usdt += reward;
+        return reward;
+    }
+
+    function renderTasks() {
+        const tasks = getTodayTasks();
+        const container = document.getElementById('taskList');
+        container.innerHTML = tasks.map(t => `
+            <div class="task-item ${t.completed ? 'completed' : ''}">
+                <div class="task-check">${t.completed ? '✅' : '⬜'}</div>
+                <div class="task-info">
+                    <div class="task-name">${t.name}</div>
+                    <div class="task-desc">${t.desc}</div>
+                </div>
+                <div class="task-reward">+$${t.reward}</div>
+            </div>
+        `).join('');
+    }
+
+    // ========== 道具系统 ==========
+    const ITEMS = [
+        { id: 'shield', icon: '🛡️', name: '止损护盾', desc: '下次亏损交易自动减半损失', price: 2000 },
+        { id: 'crystal', icon: '🔮', name: '预测水晶', desc: '查看明天的行情方向（准确率70%）', price: 1500 },
+        { id: 'magnet', icon: '🧲', name: '利润磁铁', desc: '下次盈利交易自动增加50%收益', price: 2500 },
+        { id: 'time_turner', icon: '⏰', name: '时间倒流', desc: '撤销上一次交易', price: 3000 },
+        { id: 'lucky_charm', icon: '🍀', name: '幸运符', desc: '今天触发好事件的概率翻倍', price: 1000 },
+        { id: 'double_or_nothing', icon: '🎲', name: '双倍赌注', desc: '下一笔交易收益/亏损翻倍', price: 1800 }
+    ];
+
+    function getMyItems() {
+        return JSON.parse(localStorage.getItem('crypto_adventure_items') || '[]');
+    }
+
+    function buyItem(itemId) {
+        const item = ITEMS.find(i => i.id === itemId);
+        if (!item) return;
+        if (G.usdt < item.price) {
+            showNotification('USDT不足！');
+            return;
+        }
+        G.usdt -= item.price;
+        const items = getMyItems();
+        items.push({ id: itemId, boughtDay: G.day });
+        localStorage.setItem('crypto_adventure_items', JSON.stringify(items));
+        showNotification(`购买成功：${item.name}`);
+        autoSave();
+        updateUI();
+        renderItems();
+    }
+
+    function useItem(itemId) {
+        const items = getMyItems();
+        const idx = items.findIndex(i => i.id === itemId);
+        if (idx === -1) return;
+        items.splice(idx, 1);
+        localStorage.setItem('crypto_adventure_items', JSON.stringify(items));
+        // 这里可以添加道具使用效果
+        showNotification('道具已使用！');
+        renderItems();
+    }
+
+    function renderItems() {
+        const myItems = getMyItems();
+        const shop = document.getElementById('itemList');
+        const owned = document.getElementById('myItemList');
+
+        shop.innerHTML = ITEMS.map(item => {
+            const count = myItems.filter(i => i.id === item.id).length;
+            return `
+                <div class="item-card">
+                    <div class="item-icon">${item.icon}</div>
+                    <div class="item-info">
+                        <div class="item-name">${item.name}</div>
+                        <div class="item-desc">${item.desc}</div>
+                    </div>
+                    <button class="item-price" onclick="buyItem('${item.id}')">$${item.price}</button>
+                </div>
+            `;
+        }).join('');
+
+        if (myItems.length === 0) {
+            owned.innerHTML = '<div style="text-align:center; color:var(--text2); padding:20px;">暂无道具</div>';
+        } else {
+            // 按类型分组
+            const grouped = {};
+            myItems.forEach(i => {
+                grouped[i.id] = (grouped[i.id] || 0) + 1;
+            });
+            owned.innerHTML = Object.keys(grouped).map(id => {
+                const item = ITEMS.find(i => i.id === id);
+                return `
+                    <div class="item-card">
+                        <div class="item-icon">${item.icon}</div>
+                        <div class="item-info">
+                            <div class="item-name">${item.name} x${grouped[id]}</div>
+                            <div class="item-desc">${item.desc}</div>
+                        </div>
+                        <button class="item-price" onclick="useItem('${id}')">使用</button>
+                    </div>
+                `;
+            }).join('');
+        }
+    }
+
+    // ========== 设置功能 ==========
+    function exportSave() {
+        const data = {
+            saves: getSaves(),
+            achievements: JSON.parse(localStorage.getItem('crypto_adventure_achievements') || '[]'),
+            leaderboard: JSON.parse(localStorage.getItem('crypto_adventure_leaderboard') || '[]'),
+            items: JSON.parse(localStorage.getItem('crypto_adventure_items') || '[]'),
+            version: '0.2'
+        };
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'crypto_adventure_backup.json';
+        a.click();
+        URL.revokeObjectURL(url);
+        showNotification('存档已导出！');
+    }
+
+    function importSave() {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.json';
+        input.onchange = (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                try {
+                    const data = JSON.parse(ev.target.result);
+                    if (data.saves) localStorage.setItem(SAVE_KEY, JSON.stringify(data.saves));
+                    if (data.achievements) localStorage.setItem('crypto_adventure_achievements', JSON.stringify(data.achievements));
+                    if (data.leaderboard) localStorage.setItem('crypto_adventure_leaderboard', JSON.stringify(data.leaderboard));
+                    if (data.items) localStorage.setItem('crypto_adventure_items', JSON.stringify(data.items));
+                    showNotification('存档已导入！刷新页面生效');
+                    setTimeout(() => location.reload(), 1500);
+                } catch(e) {
+                    showNotification('导入失败：文件格式错误');
+                }
+            };
+            reader.readAsText(file);
+        };
+        input.click();
+    }
+
+    function confirmReset() {
+        if (confirm('确定要重置所有游戏数据吗？\n\n包括：存档、成就、排行榜、道具\n\n此操作不可撤销！')) {
+            localStorage.removeItem(SAVE_KEY);
+            localStorage.removeItem('crypto_adventure_achievements');
+            localStorage.removeItem('crypto_adventure_leaderboard');
+            localStorage.removeItem('crypto_adventure_items');
+            localStorage.removeItem('crypto_adventure_tasks');
+            showNotification('游戏已重置！');
+            setTimeout(() => location.reload(), 1000);
+        }
+    }
+
+    function showTutorial() {
+        const steps = [
+            { icon: '👋', title: '欢迎来到加密货币冒险！', desc: '这是一个模拟加密货币投资的游戏。你的目标是通过买卖加密货币，让资产增值。' },
+            { icon: '💰', title: '初始资金', desc: '你有10,000 USDT的初始资金。可以买入BTC、ETH、SOL三种加密货币。' },
+            { icon: '📈', title: '买卖操作', desc: '点击「买入」或「卖出」按钮进行交易。输入金额后确认即可。' },
+            { icon: '📅', title: '每天结算', desc: '点击「结束今天」推进一天。每天市场都会有波动，也可能触发随机事件。' },
+            { icon: '🎲', title: '随机事件', desc: '市场会随机发生各种事件，你的选择会影响收益。有普通事件和黑天鹅事件。' },
+            { icon: '🏆', title: '成就系统', desc: '完成特定目标可以解锁成就。收集所有成就成为真正的币圈大佬！' },
+            { icon: '📋', title: '每日任务', desc: '每天有5个任务可以完成，完成获得USDT奖励。' },
+            { icon: '🎒', title: '道具商店', desc: '用USDT购买道具，可以在关键时刻使用获得优势。' },
+            { icon: '💾', title: '自动存档', desc: '游戏会自动存档。关闭页面后再打开，可以继续之前的游戏。' }
+        ];
+        let currentStep = 0;
+
+        function renderStep() {
+            const modal = document.getElementById('eventModal');
+            const s = steps[currentStep];
+            document.getElementById('eventIcon').textContent = s.icon;
+            document.getElementById('eventTitle').textContent = s.title;
+            document.getElementById('eventDesc').textContent = s.desc;
+
+            const dots = `<div class="tutorial-dots">${steps.map((_, i) => `<div class="dot ${i === currentStep ? 'active' : ''}"></div>`).join('')}</div>`;
+
+            const choicesDiv = document.getElementById('eventChoices');
+            choicesDiv.innerHTML = dots + `
+                <div style="display:flex; gap:8px;">
+                    ${currentStep > 0 ? '<button class="modal-btn modal-btn-secondary" style="flex:1;" onclick="tutorialPrev()">上一步</button>' : ''}
+                    <button class="modal-btn modal-btn-primary" style="flex:1;" onclick="${currentStep < steps.length - 1 ? 'tutorialNext()' : 'closeTutorial()'}">
+                        ${currentStep < steps.length - 1 ? '下一步' : '开始游戏！'}
+                    </button>
+                </div>
+            `;
+            modal.classList.remove('hidden');
+        }
+
+        window.tutorialNext = () => { currentStep++; renderStep(); };
+        window.tutorialPrev = () => { currentStep--; renderStep(); };
+        window.closeTutorial = () => { document.getElementById('eventModal').classList.add('hidden'); };
+
+        renderStep();
+    }
+
+    function showChangelog() {
+        const modal = document.getElementById('eventModal');
+        document.getElementById('eventIcon').textContent = '📝';
+        document.getElementById('eventTitle').textContent = '更新日志';
+        document.getElementById('eventDesc').innerHTML = `
+            <div style="text-align:left; font-size:13px; line-height:1.8;">
+                <b>b0.116 (当前版本)</b><br>
+                • 新增云端存档（多设备同步）<br>
+                • 新增用户注册/登录系统<br>
+                • 新增排行榜全服共享<br>
+                • 新增成就云端同步<br>
+                • 优化存档管理<br><br>
+                <b>b0.115</b><br>
+                • 新增存档系统（自动保存/多存档）<br>
+                • 新增成就系统（18个成就）<br>
+                • 新增排行榜（历史最佳记录）<br>
+                • 新增每日任务系统<br>
+                • 新增道具商店（6种道具）<br>
+                • 新增新手教程<br>
+                • 新增导出/导入存档<br>
+                • 新增底部导航栏<br>
+                • 优化UI界面<br><br>
+                <b>b0.114</b><br>
+                • 基础交易系统<br>
+                • 15种随机事件 + 3种黑天鹅<br>
+                • 行情图表
+            </div>
+        `;
+        document.getElementById('eventChoices').innerHTML = '<button class="modal-btn modal-btn-primary" style="width:100%;" onclick="document.getElementById(\'eventModal\').classList.add(\'hidden\')">关闭</button>';
+        modal.classList.remove('hidden');
+    }
+
+    // ========== 返回主页 ===========
+    function backToHome() {
+        if (!confirm('确定回到主页面？当前游戏进度会自动保存')) return;
+        autoSave();
+        document.getElementById('gamePage').classList.add('hidden');
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.getElementById('tabBar').classList.add('hidden');
+        document.getElementById('startPage').classList.remove('hidden');
+        renderSaveList();
+        renderBestRecord();
+    }
+
+    // ========== 底部导航 ==========
+    function switchTab(tab) {
+        // 隐藏所有页面
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.getElementById('gamePage').classList.add('hidden');
+
+        // 更新tab样式
+        document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+        event.target.closest('.tab-item').classList.add('active');
+
+        // 显示对应页面
+        switch(tab) {
+            case 'game':
+                document.getElementById('gamePage').classList.remove('hidden');
+                break;
+            case 'task':
+                document.getElementById('taskPage').classList.add('active');
+                renderTasks();
+                break;
+            case 'item':
+                document.getElementById('itemPage').classList.add('active');
+                renderItems();
+                break;
+            case 'achieve':
+                document.getElementById('achievePage').classList.add('active');
+                renderAchievements();
+                break;
+            case 'setting':
+                document.getElementById('settingPage').classList.add('active');
+                break;
+        }
+    }
+
+    // ========== 启动 ==========
+    function startGame() {
+        startNewGame();
+        document.getElementById('tabBar').classList.remove('hidden');
+        // 检查是否第一次玩
+        const hasPlayed = localStorage.getItem('crypto_adventure_played');
+        if (!hasPlayed) {
+            localStorage.setItem('crypto_adventure_played', 'true');
+            showTutorial();
+        }
+    }
+
+    // 修改 loadGame 也显示导航栏
+    const _origLoadGame = loadGame;
+    loadGame = function(slot) {
+        _origLoadGame(slot);
+        document.getElementById('tabBar').classList.remove('hidden');
+    };
+
+    // 在 endDay 中添加成就检查和任务检查
+    const _origEndDay = endDay;
+    endDay = function() {
+        _origEndDay();
+        checkAchievements();
+        checkDailyTasks();
+    };
+
+    // 在 showGameOver 中保存排行榜
+    const _origShowGameOver = showGameOver;
+    showGameOver = function() {
+        saveToLeaderboard();
+        _origShowGameOver();
+    };
+    </script>
+</body>
+</html>

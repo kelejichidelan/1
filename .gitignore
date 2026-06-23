@@ -1,0 +1,10 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+backend/venv/
+cloudflare-tunnel.log
+.DS_Store
+*.bak
+*.original
+*.update_backup
+*.game_backup

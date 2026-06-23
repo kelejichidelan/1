@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>加密货币大冒险 - 维护中</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #0a0a0f;
+            color: #e0e0e0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            text-align: center;
+            padding: 40px;
+            max-width: 500px;
+        }
+        .icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+            animation: spin 3s linear infinite;
+        }
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        h1 {
+            font-size: 28px;
+            margin-bottom: 16px;
+            color: #f0b90b;
+        }
+        p {
+            font-size: 16px;
+            line-height: 1.6;
+            color: #888;
+            margin-bottom: 12px;
+        }
+        .features {
+            text-align: left;
+            margin: 30px 0;
+            padding: 20px;
+            background: #111;
+            border-radius: 12px;
+            border: 1px solid #222;
+        }
+        .features h3 {
+            color: #f0b90b;
+            margin-bottom: 12px;
+            font-size: 16px;
+        }
+        .features ul {
+            list-style: none;
+            padding: 0;
+        }
+        .features li {
+            padding: 6px 0;
+            font-size: 14px;
+            color: #aaa;
+        }
+        .features li::before {
+            content: "✅ ";
+        }
+        .time {
+            margin-top: 24px;
+            font-size: 13px;
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="icon">🔧</div>
+        <h1 id="title">服务器维护中</h1>
+        <p id="estimatedTime">预计维护时间：30-60分钟</p>
+        
+        <div class="features">
+            <h3 id="updateNote">🎮 新功能预告：</h3>
+            <ul id="featureList"></ul>
+        </div>
+        
+        <p style="margin-top:16px; color:var(--yellow); font-weight:600;">📢 提示：更新完成后，请手动刷新浏览器页面（下拉刷新或按F5）</p>
+        <p style="font-size:12px; color:#555; margin-top:8px;">当前时间：<span id="currentTime"></span></p>
+        <div class="time">🦞 由龙虾为你升级 · <span id="version">b0.116</span></div>
+    </div>
+
+    <script>
+        // 从配置文件读取维护公告内容
+        fetch('maintenance-config.json?t=' + Date.now())
+            .then(response => response.json())
+            .then(config => {
+                document.getElementById('title').textContent = config.title;
+                document.getElementById('estimatedTime').textContent = '预计维护时间：' + config.estimatedTime;
+                document.getElementById('version').textContent = config.version;
+                document.getElementById('updateNote').textContent = '🎮 ' + config.updateNote;
+                
+                const featureList = document.getElementById('featureList');
+                config.features.forEach(feature => {
+                    const li = document.createElement('li');
+                    li.textContent = feature;
+                    featureList.appendChild(li);
+                });
+            })
+            .catch(error => {
+                console.error('加载维护配置失败:', error);
+                // 使用默认内容
+                const defaultFeatures = [
+                    '杠杆交易系统',
+                    '手续费机制',
+                    '每日新闻系统',
+                    'K线图表',
+                    '山寨币',
+                    '智能庄家AI',
+                    '止盈止损系统',
+                    '其他散户NPC'
+                ];
+                const featureList = document.getElementById('featureList');
+                defaultFeatures.forEach(feature => {
+                    const li = document.createElement('li');
+                    li.textContent = feature;
+                    featureList.appendChild(li);
+                });
+            });
+        
+        // 显示中国时间
+        function updateTime() {
+            const now = new Date();
+            const chinaTime = new Date(now.getTime() + (8 * 60 * 60 * 1000)); // UTC+8
+            const hours = chinaTime.getUTCHours().toString().padStart(2, '0');
+            const minutes = chinaTime.getUTCMinutes().toString().padStart(2, '0');
+            const seconds = chinaTime.getUTCSeconds().toString().padStart(2, '0');
+            document.getElementById('currentTime').textContent = `${hours}:${minutes}:${seconds}`;
+        }
+        updateTime();
+        setInterval(updateTime, 1000);
+    </script>
+</body>
+</html>
