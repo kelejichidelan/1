@@ -430,4 +430,4 @@ if __name__ == '__main__':
     print('🎮 加密货币冒险后端启动中...')
     print('📡 API地址: http://0.0.0.0:5000')
     print('📦 版本: 1.0 - 杠杆·手续费·新闻·K线·山寨币·庄家AI·NPC')
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 5000)), debug=os.environ.get("DEBUG", "false").lower() == "true")
